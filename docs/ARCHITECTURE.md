@@ -138,11 +138,47 @@ Every call is logged to `llm_calls` with the exact grounding chunks it was
 given, which is what makes the assistant-quality guardrail computable after the
 fact rather than only live.
 
-### 2.6 Provenance is a column, not a convention
+### 2.6 A field a source cannot observe is NULL, never invented
 
-`events.source` is `REAL_DATASET | SIMULATED | LIVE_DEMO`, and
-`simulation_runs` stores the seed and the full parameter set for every simulated
-batch. Every API response and every console surface reports which sources it
+The real dataset records purchases, not browsing: no device, no traffic source,
+no page, no session beyond the invoice, and 22.8% of lines carry no customer id.
+Loading it into an event schema that requires those fields would mean
+fabricating them.
+
+So the schema was relaxed instead, under one rule applied everywhere:
+
+| Field | How an unobservable value is recorded |
+| --- | --- |
+| `device`, `traffic_source` | `unknown` enum member |
+| `page`, `is_new_user` | `NULL` |
+| `user_id` | `NULL` (anonymous line, kept so revenue still reconciles) |
+| `brand`, `gtin`, `image_url`, `description` | `NULL` on the product |
+
+Each dataset also declares `observable_steps` — the funnel steps it can actually
+measure — and the console reads that rather than assuming every step is
+measurable. For a transactional source it is `("visit", "purchase")`, so the
+journey funnel is shown from simulated sessions and labelled.
+
+The alternative, filling in a plausible device split, would have produced a
+mobile-vs-desktop funnel that looked entirely convincing and meant nothing.
+
+### 2.7 Derived catalog fields are flagged, absent ones stay absent
+
+Category and attributes are derived from the real product description by
+deterministic rules and recorded in `generated_fields` so the UI can mark them.
+Brand, GTIN and images are simply absent from the source, so they stay `NULL`:
+guessing a brand is a fabrication a merchandiser could act on. That the real
+coverage of those fields is 0% is a genuine finding, and the input to the
+Phase 8 AI-readiness score.
+
+### 2.8 Provenance is a column, not a convention
+
+`events.source` is `REAL_DATASET | SIMULATED | LIVE_DEMO`. `dataset_imports`
+records the licence, attribution, file checksum, every drop reason and the
+observable steps for each real import; `simulation_runs` stores the seed, the
+full parameter set and the ground truth for each simulated batch. Ingestion is
+idempotent: event ids are UUIDv5 over the source's natural key, so a re-run
+inserts nothing. Every API response and every console surface reports which sources it
 covers. This is what makes the honesty rule enforceable rather than aspirational.
 
 ## 3. Repository layout
@@ -156,7 +192,7 @@ covers. This is what makes the honesty rule enforceable rather than aspirational
 | `packages/tracking` | Browser tracking SDK |
 | `packages/eslint-config` | Shared flat ESLint config |
 | `models/` | Versioned SQL views |
-| `scripts/` | ingest, seed, simulate, metrics, model runner |
+| `scripts/` | ingest, seed, build_seed, simulate, metrics, model runner |
 | `docs/` | PRD, this file, simulation, readout, launch plan, metrics dictionary |
 | `reports/` | `metrics.json` — the only source for any number quoted anywhere |
 
@@ -187,4 +223,8 @@ Deployed, all free tier:
 | Metrics | pytest | Console figures reconciled against direct SQL (Phase 4) |
 | Stats engine | pytest | Recovers a known simulated effect; A/A false-positive rate; SRM detection (Phase 7) |
 | Console IA | pytest | Storefront deep-links match the console's own section list |
+| Dataset cleaning | pytest | Every source row reconciles to a load, a return or a named drop |
+| Catalog | pytest | Derived fields flagged; absent fields stay NULL |
+| Simulator | pytest | Determinism; an effect lands only on its own transition; A/A is exactly zero |
+| Simulator docs | pytest | Every parameter in code is documented in SIMULATION.md |
 | Journeys | Playwright | Storefront flows and event emission (Phase 3) |

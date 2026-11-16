@@ -24,17 +24,25 @@ def main() -> None:
     with st.sidebar:
         st.markdown("### 🔶 CartIQ")
         st.caption("Conversion Intelligence Console")
-        st.caption(f"v{__version__} · Phase 1 of 9")
+        st.caption(f"v{__version__} · Phase 2 of 9")
 
-    pages = [
-        st.Page(
-            str(PAGES_DIR / f"{section.key}.py"),
-            title=section.label,
-            icon=section.icon,
-            url_path=section.key.replace("_", "-"),
-            default=section.key == "overview",
-        )
-        for section in SECTIONS
-    ]
+    # The default page is served at "/", and Streamlit 404s a url_path set on
+    # it, so only the other sections get an explicit path.
+    pages: list[st.Page] = []
+    for section in SECTIONS:
+        path = str(PAGES_DIR / f"{section.key}.py")
+        if section.key == "overview":
+            pages.append(
+                st.Page(path, title=section.label, icon=section.icon, default=True)
+            )
+        else:
+            pages.append(
+                st.Page(
+                    path,
+                    title=section.label,
+                    icon=section.icon,
+                    url_path=section.key.replace("_", "-"),
+                )
+            )
 
     st.navigation(pages).run()

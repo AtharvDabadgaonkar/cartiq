@@ -36,6 +36,11 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# Ships the py.typed marker so the Streamlit console type-checks against this
+# package rather than treating it as untyped.
+[tool.setuptools.package-data]
+cartiq_api = ["py.typed"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src", "../console"]
@@ -64,7 +69,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["D103", "ANN201", "ANN001"]
+"tests/*" = ["D103", "ANN201", "ANN001", "ANN002", "ANN003", "D100"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

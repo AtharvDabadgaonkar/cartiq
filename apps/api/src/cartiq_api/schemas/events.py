@@ -34,11 +34,16 @@ class EventType(StrEnum):
 
 
 class Device(StrEnum):
-    """Device class, derived from the user agent."""
+    """Device class, derived from the user agent.
+
+    `UNKNOWN` is for sources that do not observe it. The rule across CartIQ: a
+    field a source cannot observe is null or unknown, never invented.
+    """
 
     DESKTOP = "desktop"
     MOBILE = "mobile"
     TABLET = "tablet"
+    UNKNOWN = "unknown"
 
 
 class TrafficSource(StrEnum):
@@ -50,6 +55,7 @@ class TrafficSource(StrEnum):
     SOCIAL = "social"
     EMAIL = "email"
     REFERRAL = "referral"
+    UNKNOWN = "unknown"
 
 
 class DataSource(StrEnum):
@@ -79,8 +85,10 @@ class Event(BaseModel):
     session_id: str = Field(min_length=1, max_length=64)
     device: Device
     traffic_source: TrafficSource
-    is_new_user: bool
-    page: str = Field(min_length=1, max_length=512)
+    #: Null when the source cannot tell (an anonymous, unattributed order line).
+    is_new_user: bool | None = None
+    #: Null for sources with no concept of a page (an imported order line).
+    page: str | None = Field(default=None, min_length=1, max_length=512)
     product_id: str | None = Field(default=None, max_length=64)
     price: float | None = Field(default=None, ge=0)
     quantity: int | None = Field(default=None, gt=0)

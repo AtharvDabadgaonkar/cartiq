@@ -12,12 +12,42 @@ proves their impact through a built-in A/B experiment studio.
 
 **Diagnose → Intervene → Measure → Scale**
 
-> ### 🚧 Build status: Phase 1 of 9 complete (foundation)
+> ### 🚧 Build status: Phase 2 of 9 complete (data)
 >
-> This README quotes **no metrics yet**, by design. Every figure in this project
-> must be produced by `make metrics` into [`reports/metrics.json`](reports/metrics.json);
-> none are hand-written. Screenshots, the live demo link and the key-metrics
-> table land in Phase 9.
+> Every figure below is produced by `make metrics` into
+> [`reports/metrics.json`](reports/metrics.json) and carries its own provenance.
+> None are hand-written. Screenshots and the live demo link land in Phase 9.
+
+## The data, as loaded
+
+| | Real dataset | Simulated |
+| --- | --- | --- |
+| Events | 84,473 | 32,793 |
+| Orders / sessions | 3,000 invoices | 12,000 sessions |
+| Customers | 1,412 | — |
+| Catalog products | 3,331 | uses the real catalog |
+| Return lines | 1,811 | — |
+
+Those are the committed seed sample (`make seed`), which is what a clean
+checkout gets. `make ingest` loads the full dataset instead — about twelve times
+the rows — and prints its own reconciliation of every source row to a loaded
+event, a return line, or a named drop reason. Re-run `make metrics` afterwards
+and the table above reports the full figures.
+
+**What the real data can and cannot measure.** Online Retail II records
+*purchases*, not browsing. It has no device, no traffic source, no page and no
+session beyond the invoice, and 28.5% of its lines have no customer
+id at all. So CartIQ applies one rule everywhere: **a field a source cannot
+observe is `NULL` or `unknown`, never invented.** The journey funnel above
+`purchase` is therefore measured on *simulated* sessions and labelled as such;
+value metrics, segmentation and the catalog come from the real rows.
+
+The catalog makes the same point. Title and price are real;
+74% of products get a category derived from their real description
+(the rest stay `uncategorised` rather than being forced into a bucket); and
+brand, GTIN and image coverage are **0%** — not a bug, but the genuine
+state of the catalog, and exactly what the Phase 8 AI-readiness score exists to
+measure.
 
 ## On data honesty
 
@@ -51,9 +81,16 @@ Requires Docker, Node 20+, pnpm and Python 3.11.
 
 ```bash
 make install   # JS + Python dependencies, creates .env from .env.example
-make db-up     # Postgres with pgvector, on port 5433
-make migrate   # Prisma migrations + SQL models
+make data      # Postgres + migrations + the committed seed sample
 make dev       # storefront :3000 · console :8501 · api :8000
+```
+
+Then, optionally:
+
+```bash
+make ingest      # the full real dataset (44MB, downloads without credentials)
+make simulate    # 500k simulated sessions (see docs/SIMULATION.md)
+make metrics     # recompute every number quoted here
 ```
 
 No API key is needed: `LLM_PROVIDER=mock` is the default and the mock provider
@@ -122,7 +159,7 @@ written up with their trade-offs in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 | # | Phase | Status |
 | --- | --- | --- |
 | 1 | Foundation — monorepo, schema, tracking SDK, console shell, CI, mock LLM | ✅ |
-| 2 | Data — ingestion, seed sample, catalog, session simulator | — |
+| 2 | Data — ingestion, seed sample, catalog, session simulator | ✅ |
 | 3 | Storefront — pages, checkout, event tracking, Playwright | — |
 | 4 | Diagnose — SQL models, funnel, KPIs, segmentation, friction | — |
 | 5 | Abandonment — risk model, metrics report, nudge engine | — |
@@ -133,6 +170,15 @@ written up with their trade-offs in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 
 ## Licence and data
 
-Code: MIT. The source datasets (REES46 / Olist) are licensed by their
-publishers and are **not** committed; `scripts/ingest.py` documents the download
-steps. A small seed sample is committed so the app runs out of the box.
+Code: MIT.
+
+The real dataset is **Online Retail II** from the UCI Machine Learning
+Repository, used under **CC BY 4.0**:
+
+> Chen, D. (2019). *Online Retail II* [Dataset]. UCI Machine Learning
+> Repository. <https://doi.org/10.24432/C5CG6D>. Licensed CC BY 4.0.
+
+It downloads without credentials, so `make ingest` works on a clean checkout.
+The committed seed in `data/seed/` is a genuine extract of it (the earliest
+3,000 invoices), redistributed under the same licence with attribution
+recorded in `data/seed/manifest.json` and in the `dataset_imports` table.

@@ -1,0 +1,35 @@
+{
+  "generated_by": "scripts/build_seed.py",
+  "real": {
+    "dataset": "Online Retail II (UCI Machine Learning Repository)",
+    "url": "https://archive.ics.uci.edu/dataset/502/online+retail+ii",
+    "licence": "CC BY 4.0",
+    "attribution": "Chen, D. (2019). Online Retail II [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C5CG6D. Licensed CC BY 4.0.",
+    "selection": "earliest 3000 invoices, whole orders only",
+    "events": 84473,
+    "products": 3331,
+    "return_lines": 1811,
+    "observable_funnel_steps": [
+      "visit",
+      "purchase"
+    ]
+  },
+  "simulated": {
+    "generated_by": "scripts/simulate.py (cartiq_api.simulation)",
+    "seed": 42,
+    "sessions": 12000,
+    "events": 32793,
+    "documented_in": "docs/SIMULATION.md",
+    "truth": {
+      "expected_control_conversion": 0.01692332,
+      "expected_treatment_conversion": 0.01826333,
+      "expected_absolute_lift": 0.00134001,
+      "expected_relative_lift": 0.07918099,
+      "realised_control_conversion": 0.016421,
+      "realised_treatment_conversion": 0.01691,
+      "realised_absolute_lift": 0.000489,
+      "realised_relative_lift": 0.029773
+    },
+    "warning": "SIMULATED sessions. Not a real-world result."
+  }
+}

@@ -29,7 +29,13 @@ export const EVENT_TYPES = [
   'nudge_clicked',
 ] as const;
 
-export const DEVICES = ['desktop', 'mobile', 'tablet'] as const;
+/**
+ * `unknown` exists for sources that do not observe the field. The rule across
+ * CartIQ: a field a source cannot observe is null or `unknown`, never invented.
+ * Real transactional datasets carry no device or attribution signal, so their
+ * rows use `unknown` rather than a plausible-looking guess.
+ */
+export const DEVICES = ['desktop', 'mobile', 'tablet', 'unknown'] as const;
 
 export const TRAFFIC_SOURCES = [
   'direct',
@@ -38,6 +44,7 @@ export const TRAFFIC_SOURCES = [
   'social',
   'email',
   'referral',
+  'unknown',
 ] as const;
 
 export const eventTypeSchema = z.enum(EVENT_TYPES);
@@ -65,9 +72,13 @@ export const eventSchema = z.object({
   session_id: z.string().min(1).max(64),
   device: deviceSchema,
   traffic_source: trafficSourceSchema,
-  is_new_user: z.boolean(),
-  /** Route path, e.g. "/product/1234". Query strings are stripped by the SDK. */
-  page: z.string().min(1).max(512),
+  /** Null when the source cannot tell (an anonymous, unattributed order line). */
+  is_new_user: z.boolean().nullable().default(null),
+  /**
+   * Route path, e.g. "/product/1234". Query strings are stripped by the SDK.
+   * Null for sources with no concept of a page (an imported order line).
+   */
+  page: z.string().min(1).max(512).nullable().default(null),
   product_id: z.string().min(1).max(64).optional(),
   /** Unit price in minor units is avoided on purpose: the source datasets are decimal. */
   price: z.number().nonnegative().optional(),

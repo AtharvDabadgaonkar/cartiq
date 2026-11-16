@@ -39,7 +39,7 @@ const NARRATIVE = [
 
 const PHASES = [
   { n: 1, name: 'Foundation', done: true },
-  { n: 2, name: 'Data & simulator', done: false },
+  { n: 2, name: 'Data & simulator', done: true },
   { n: 3, name: 'Storefront', done: false },
   { n: 4, name: 'Diagnose', done: false },
   { n: 5, name: 'Abandonment', done: false },
@@ -75,7 +75,7 @@ export default function HomePage() {
 
       <main id="main" className="ember-glow">
         <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-          <Badge variant="amber">Portfolio build · Phase 1 of 9 complete</Badge>
+          <Badge variant="amber">Portfolio build · Phase 2 of 9 complete</Badge>
           <h1 className="mt-5 max-w-3xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">
             Most commerce teams know their conversion rate.
             <span className="text-primary">

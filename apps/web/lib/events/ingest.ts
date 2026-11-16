@@ -13,8 +13,9 @@ export type EventRow = {
   sessionId: string;
   device: CartIQEvent['device'];
   trafficSource: CartIQEvent['traffic_source'];
-  isNewUser: boolean;
-  page: string;
+  /** Null when the source cannot observe it; never guessed. */
+  isNewUser: boolean | null;
+  page: string | null;
   productId: string | null;
   price: Prisma.Decimal | null;
   quantity: number | null;

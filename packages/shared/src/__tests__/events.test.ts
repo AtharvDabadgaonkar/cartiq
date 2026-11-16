@@ -40,6 +40,33 @@ describe('eventSchema', () => {
     expect(() => eventSchema.parse({ ...validEvent, quantity: 0 })).toThrow();
   });
 
+  it('allows unobservable fields to be null rather than invented', () => {
+    // An imported order line has no device, no attribution and no page. The
+    // schema must let those be absent instead of forcing a plausible guess.
+    const imported = eventSchema.parse({
+      ...validEvent,
+      device: 'unknown',
+      traffic_source: 'unknown',
+      page: null,
+      is_new_user: null,
+    });
+    expect(imported.device).toBe('unknown');
+    expect(imported.traffic_source).toBe('unknown');
+    expect(imported.page).toBeNull();
+    expect(imported.is_new_user).toBeNull();
+  });
+
+  it('defaults page and is_new_user to null when omitted', () => {
+    const { page: _page, is_new_user: _isNew, ...bare } = validEvent;
+    const parsed = eventSchema.parse(bare);
+    expect(parsed.page).toBeNull();
+    expect(parsed.is_new_user).toBeNull();
+  });
+
+  it('still rejects an empty page string, which is not the same as absent', () => {
+    expect(() => eventSchema.parse({ ...validEvent, page: '' })).toThrow();
+  });
+
   it('allows an anonymous visitor but never a missing session', () => {
     expect(eventSchema.parse({ ...validEvent, user_id: null }).user_id).toBeNull();
     const { session_id: _omitted, ...withoutSession } = validEvent;

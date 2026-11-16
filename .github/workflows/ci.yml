@@ -59,6 +59,18 @@ jobs:
           python-version: '3.11'
           cache: pip
       - run: pip install -e "apps/api[dev]" -r requirements.txt
+      # The loader integration tests need the schema; without this they skip,
+      # and the code that writes the warehouse would go untested in CI.
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @cartiq/web exec prisma migrate deploy
+      - run: python scripts/build_models.py
       - run: ruff check apps/api apps/console scripts streamlit_app.py
       - run: ruff format --check apps/api apps/console scripts streamlit_app.py
       - run: mypy apps/api/src apps/console/cartiq_console

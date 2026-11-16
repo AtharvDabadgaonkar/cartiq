@@ -43,8 +43,51 @@ def row_counts() -> dict[str, int]:
             (SELECT count(*) FROM events WHERE source = 'SIMULATED')          AS simulated_events,
             (SELECT count(*) FROM events WHERE source = 'LIVE_DEMO')          AS demo_events,
             (SELECT count(*) FROM products)                                   AS products,
+            (SELECT count(*) FROM return_lines)                               AS return_lines,
             (SELECT count(*) FROM experiments)                                AS experiments,
             (SELECT count(*) FROM llm_calls)                                  AS llm_calls
     """
     frame = query(sql)
     return {column: int(frame.iloc[0][column]) for column in frame.columns}
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def dataset_imports() -> pd.DataFrame:
+    """Provenance of every real dataset loaded, newest first."""
+    return query(
+        """
+        SELECT name, licence, attribution, url, rows_read, rows_loaded,
+               rows_dropped, products_loaded, returns_loaded, observable_steps,
+               created_at
+        FROM dataset_imports
+        ORDER BY created_at DESC
+        """
+    )
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def simulation_runs() -> pd.DataFrame:
+    """Provenance of every simulation run, newest first."""
+    return query(
+        """
+        SELECT label, seed, sessions, params, created_at
+        FROM simulation_runs
+        ORDER BY created_at DESC
+        """
+    )
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def observable_steps() -> set[str]:
+    """Funnel steps any loaded real dataset can actually observe.
+
+    The funnel page reads this instead of assuming every step is measurable:
+    a transactional source records purchases, not browsing.
+    """
+    frame = dataset_imports()
+    if frame.empty:
+        return set()
+    steps: set[str] = set()
+    for row in frame["observable_steps"]:
+        steps.update(row or [])
+    return steps

@@ -37,10 +37,13 @@ enum DataSource {
   LIVE_DEMO
 }
 
+/// `unknown` is for sources that do not observe the field. The rule across
+/// CartIQ: a field a source cannot observe is null or unknown, never invented.
 enum DeviceType {
   desktop
   mobile
   tablet
+  unknown
 }
 
 enum TrafficSource {
@@ -50,6 +53,7 @@ enum TrafficSource {
   social
   email
   referral
+  unknown
 }
 
 /// Mirrors packages/shared/src/events.ts EVENT_TYPES. Kept in sync by
@@ -89,10 +93,12 @@ model Event {
 
   device        DeviceType
   trafficSource TrafficSource @map("traffic_source")
-  isNewUser     Boolean       @map("is_new_user")
+  /// Null when the source cannot tell (an anonymous, unattributed order line).
+  isNewUser     Boolean?      @map("is_new_user")
 
-  page      String  @db.VarChar(512)
-  productId String? @map("product_id") @db.VarChar(64)
+  /// Null for sources with no concept of a page (an imported order line).
+  page      String?  @db.VarChar(512)
+  productId String?  @map("product_id") @db.VarChar(64)
   /// Unit price for item events; order total for `purchase`.
   price     Decimal? @db.Decimal(12, 2)
   quantity  Int?
@@ -101,9 +107,9 @@ model Event {
   experimentAssignments Json @default("{}") @map("experiment_assignments")
   properties            Json @default("{}")
 
-  source       DataSource @default(LIVE_DEMO)
+  source          DataSource @default(LIVE_DEMO)
   /// Links simulated rows back to the run that produced them.
-  simulationRunId String? @map("simulation_run_id") @db.Uuid
+  simulationRunId String?    @map("simulation_run_id") @db.Uuid
 
   ingestedAt DateTime @default(now()) @map("ingested_at") @db.Timestamptz(3)
 
@@ -117,6 +123,66 @@ model Event {
   @@index([userId, timestamp])
   @@index([source, timestamp])
   @@map("events")
+}
+
+/// Provenance for one `make ingest` run of a real public dataset. Mirrors
+/// SimulationRun: any real number can be traced to the import that produced it,
+/// including what was dropped during cleaning and why.
+model DatasetImport {
+  id          String  @id @default(uuid()) @db.Uuid
+  /// Source key, e.g. "online-retail-ii" or "rees46".
+  source      String  @db.VarChar(64)
+  /// Human-readable dataset name.
+  name        String  @db.VarChar(256)
+  url         String  @db.VarChar(1024)
+  licence     String  @db.VarChar(128)
+  attribution String
+  /// SHA-256 of the source file, so an import is tied to exact bytes.
+  checksum    String? @db.VarChar(64)
+
+  rowsRead       Int  @map("rows_read")
+  rowsLoaded     Int  @map("rows_loaded")
+  /// { reason: count } for every row dropped during cleaning.
+  rowsDropped    Json @map("rows_dropped")
+  productsLoaded Int  @map("products_loaded")
+  returnsLoaded  Int  @map("returns_loaded")
+
+  /// Which funnel steps this source can actually observe. The console reads
+  /// this rather than assuming every step is measurable.
+  observableSteps String[] @map("observable_steps")
+
+  gitSha    String?  @map("git_sha") @db.VarChar(40)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  returns ReturnLine[]
+
+  @@index([source, createdAt])
+  @@map("dataset_imports")
+}
+
+/// Real returns/cancellations from the source dataset. Kept out of `events`
+/// because a return is a financial fact, not a browsing behaviour; the Phase 7
+/// return-rate guardrail reads this table.
+model ReturnLine {
+  id              String     @id @default(uuid()) @db.Uuid
+  /// Cancellation invoice id from the source dataset.
+  orderId         String     @map("order_id") @db.VarChar(64)
+  /// Invoice being cancelled, when the source makes that link. Usually absent.
+  originalOrderId String?    @map("original_order_id") @db.VarChar(64)
+  userId          String?    @map("user_id") @db.VarChar(64)
+  productId       String?    @map("product_id") @db.VarChar(64)
+  /// Positive count of units returned.
+  quantity        Int
+  unitPrice       Decimal    @map("unit_price") @db.Decimal(12, 2)
+  occurredAt      DateTime   @map("occurred_at") @db.Timestamptz(3)
+  source          DataSource @default(REAL_DATASET)
+  datasetImportId String?    @map("dataset_import_id") @db.Uuid
+
+  datasetImport DatasetImport? @relation(fields: [datasetImportId], references: [id], onDelete: Cascade)
+
+  @@index([occurredAt])
+  @@index([userId])
+  @@map("return_lines")
 }
 
 /// Provenance + parameters for one `make simulate` run, so any simulated
@@ -141,21 +207,21 @@ model SimulationRun {
 // ---------------------------------------------------------------------------
 
 model Product {
-  id          String   @id @db.VarChar(64)
-  title       String   @db.VarChar(512)
-  description String?
-  brand       String?  @db.VarChar(128)
-  category    String   @db.VarChar(256)
+  id           String  @id @db.VarChar(64)
+  title        String  @db.VarChar(512)
+  description  String?
+  brand        String? @db.VarChar(128)
+  category     String  @db.VarChar(256)
   /// Raw category path from the source dataset, e.g. "apparel.shoes.running".
   categoryPath String? @map("category_path") @db.VarChar(512)
-  price       Decimal  @db.Decimal(12, 2)
-  currency    String   @default("USD") @db.VarChar(3)
-  imageUrl    String?  @map("image_url") @db.VarChar(1024)
+  price        Decimal @db.Decimal(12, 2)
+  currency     String  @default("USD") @db.VarChar(3)
+  imageUrl     String? @map("image_url") @db.VarChar(1024)
   /// GTIN/EAN/UPC. Absent for most rows; Module 6 scores that gap.
-  gtin        String?  @db.VarChar(32)
-  inStock     Boolean  @default(true) @map("in_stock")
+  gtin         String? @db.VarChar(32)
+  inStock      Boolean @default(true) @map("in_stock")
   /// Structured attributes used by assistant filtering (size, width, material...).
-  attributes  Json     @default("{}")
+  attributes   Json    @default("{}")
 
   /// TRUE when any field was synthesised because the source dataset lacked it.
   /// Surfaced in the UI so no generated text is passed off as real data.
@@ -178,13 +244,13 @@ model Product {
 
 /// Catalog retrieval vectors. Dimension must match EMBEDDING_DIM.
 model ProductEmbedding {
-  productId String                       @id @map("product_id") @db.VarChar(64)
+  productId  String                     @id @map("product_id") @db.VarChar(64)
   /// pgvector column; queried with `<=>` via $queryRaw.
-  embedding Unsupported("vector(384)")
-  model     String                       @db.VarChar(128)
+  embedding  Unsupported("vector(384)")
+  model      String                     @db.VarChar(128)
   /// Exact text that was embedded, so retrieval is reproducible.
-  sourceText String                      @map("source_text")
-  updatedAt DateTime                     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  sourceText String                     @map("source_text")
+  updatedAt  DateTime                   @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
@@ -200,17 +266,17 @@ enum SuggestionStatus {
 /// Module 6: AI-suggested catalog fixes. Written as suggestions only; applying
 /// one is an explicit human action that records who accepted it.
 model CatalogSuggestion {
-  id        String           @id @default(uuid()) @db.Uuid
-  productId String           @map("product_id") @db.VarChar(64)
-  field     String           @db.VarChar(64)
-  currentValue String?       @map("current_value")
-  suggestedValue String      @map("suggested_value")
-  rationale String?
+  id             String           @id @default(uuid()) @db.Uuid
+  productId      String           @map("product_id") @db.VarChar(64)
+  field          String           @db.VarChar(64)
+  currentValue   String?          @map("current_value")
+  suggestedValue String           @map("suggested_value")
+  rationale      String?
   /// Model confidence in [0,1], as reported by the provider.
-  confidence Decimal?        @db.Decimal(4, 3)
-  status    SuggestionStatus @default(suggested)
-  llmCallId String?          @map("llm_call_id") @db.Uuid
-  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  confidence     Decimal?         @db.Decimal(4, 3)
+  status         SuggestionStatus @default(suggested)
+  llmCallId      String?          @map("llm_call_id") @db.Uuid
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
 
   product Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   llmCall LlmCall? @relation(fields: [llmCallId], references: [id], onDelete: SetNull)
@@ -242,23 +308,23 @@ enum MetricType {
 }
 
 model Experiment {
-  id        String           @id @default(uuid()) @db.Uuid
+  id         String           @id @default(uuid()) @db.Uuid
   /// Stable key used in the assignment hash. Never change it on a live test.
-  key       String           @unique @db.VarChar(64)
-  name      String           @db.VarChar(256)
+  key        String           @unique @db.VarChar(64)
+  name       String           @db.VarChar(256)
   hypothesis String
-  status    ExperimentStatus @default(draft)
+  status     ExperimentStatus @default(draft)
 
   /// Share of eligible traffic in the experiment, for staged rollout.
-  exposure  Decimal @default(1.0) @db.Decimal(4, 3)
+  exposure             Decimal  @default(1.0) @db.Decimal(4, 3)
   /// Minimum detectable effect, relative (0.05 = 5%).
-  mde       Decimal @db.Decimal(5, 4)
-  alpha     Decimal @default(0.05) @db.Decimal(4, 3)
-  power     Decimal @default(0.8) @db.Decimal(4, 3)
+  mde                  Decimal  @db.Decimal(5, 4)
+  alpha                Decimal  @default(0.05) @db.Decimal(4, 3)
+  power                Decimal  @default(0.8) @db.Decimal(4, 3)
   /// Required sample size per variant, computed at creation time.
-  sampleSizePerVariant Int @map("sample_size_per_variant")
+  sampleSizePerVariant Int      @map("sample_size_per_variant")
   /// Baseline conversion rate the sample size was computed from.
-  baselineRate Decimal? @map("baseline_rate") @db.Decimal(6, 5)
+  baselineRate         Decimal? @map("baseline_rate") @db.Decimal(6, 5)
 
   startedAt DateTime? @map("started_at") @db.Timestamptz(3)
   endedAt   DateTime? @map("ended_at") @db.Timestamptz(3)
@@ -289,16 +355,16 @@ model ExperimentVariant {
 }
 
 model ExperimentMetric {
-  id           String     @id @default(uuid()) @db.Uuid
-  experimentId String     @map("experiment_id") @db.Uuid
+  id                 String     @id @default(uuid()) @db.Uuid
+  experimentId       String     @map("experiment_id") @db.Uuid
   /// Key into models/metrics; see docs/METRICS_DICTIONARY.md.
-  metricKey    String     @map("metric_key") @db.VarChar(64)
-  role         MetricRole
-  type         MetricType
+  metricKey          String     @map("metric_key") @db.VarChar(64)
+  role               MetricRole
+  type               MetricType
   /// For guardrails: the worst acceptable relative change (e.g. -0.01).
-  guardrailThreshold Decimal? @map("guardrail_threshold") @db.Decimal(6, 4)
+  guardrailThreshold Decimal?   @map("guardrail_threshold") @db.Decimal(6, 4)
   /// true when a decrease is good (e.g. abandonment rate).
-  lowerIsBetter Boolean @default(false) @map("lower_is_better")
+  lowerIsBetter      Boolean    @default(false) @map("lower_is_better")
 
   experiment Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
 
@@ -309,17 +375,17 @@ model ExperimentMetric {
 /// Flags gate every intervention (nudges, assistant, personalisation) so each
 /// can be rolled out or killed independently of the experiment that proved it.
 model FeatureFlag {
-  id          String   @id @default(uuid()) @db.Uuid
-  key         String   @unique @db.VarChar(64)
-  description String
-  enabled     Boolean  @default(false)
+  id           String   @id @default(uuid()) @db.Uuid
+  key          String   @unique @db.VarChar(64)
+  description  String
+  enabled      Boolean  @default(false)
   /// Percentage rollout in [0,1] when not tied to an experiment.
-  rollout     Decimal  @default(0) @db.Decimal(4, 3)
+  rollout      Decimal  @default(0) @db.Decimal(4, 3)
   /// When set, the flag's value follows the experiment assignment instead.
-  experimentId String? @map("experiment_id") @db.Uuid
+  experimentId String?  @map("experiment_id") @db.Uuid
   /// Variant key that turns the flag on.
-  onVariant    String? @map("on_variant") @db.VarChar(64)
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  onVariant    String?  @map("on_variant") @db.VarChar(64)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   experiment Experiment? @relation(fields: [experimentId], references: [id], onDelete: SetNull)
 
@@ -329,12 +395,12 @@ model FeatureFlag {
 /// Recorded exposures. Assignment itself is a pure hash, so this table exists
 /// only for the sample-ratio-mismatch check and for debugging.
 model ExperimentExposure {
-  id           String   @id @default(uuid()) @db.Uuid
-  experimentKey String  @map("experiment_key") @db.VarChar(64)
-  variantKey   String   @map("variant_key") @db.VarChar(64)
-  unitId       String   @map("unit_id") @db.VarChar(64)
-  firstSeenAt  DateTime @default(now()) @map("first_seen_at") @db.Timestamptz(3)
-  source       DataSource @default(LIVE_DEMO)
+  id            String     @id @default(uuid()) @db.Uuid
+  experimentKey String     @map("experiment_key") @db.VarChar(64)
+  variantKey    String     @map("variant_key") @db.VarChar(64)
+  unitId        String     @map("unit_id") @db.VarChar(64)
+  firstSeenAt   DateTime   @default(now()) @map("first_seen_at") @db.Timestamptz(3)
+  source        DataSource @default(LIVE_DEMO)
 
   @@unique([experimentKey, unitId])
   @@index([experimentKey, variantKey])
@@ -363,9 +429,9 @@ model LlmCall {
   /// Cited ids absent from `grounding`: ungrounded by construction.
   ungroundedIds String[] @map("ungrounded_ids")
 
-  inputTokens  Int @map("input_tokens")
-  outputTokens Int @map("output_tokens")
-  latencyMs    Int @map("latency_ms")
+  inputTokens  Int     @map("input_tokens")
+  outputTokens Int     @map("output_tokens")
+  latencyMs    Int     @map("latency_ms")
   error        String?
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)

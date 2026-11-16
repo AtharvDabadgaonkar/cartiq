@@ -6,7 +6,8 @@ PYTHON_BASE ?= $(shell command -v python3.11 || command -v python3)
 
 .DEFAULT_GOAL := help
 .PHONY: help env install db-up db-down db-reset migrate generate dev dev-web dev-api \
-        seed simulate metrics test test-web test-api test-e2e lint typecheck format ci clean
+        dev-console ingest seed build-seed simulate simulate-aa metrics test test-web \
+        test-api test-e2e lint typecheck format ci clean data
 
 help: ## Show available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -58,11 +59,22 @@ dev-api: ## Start the FastAPI service on :8000
 dev-console: ## Start the Streamlit console on :8501
 	$(PY) -m streamlit run streamlit_app.py --server.port 8501
 
-seed: ## Load the committed seed sample into Postgres
+ingest: ## Download and load the real public dataset (UCI Online Retail II, CC BY 4.0)
+	$(PY) scripts/ingest.py
+
+seed: ## Load the committed seed sample (real extract + a small simulated run)
 	$(PY) scripts/seed.py
+
+build-seed: ## Rebuild data/seed from the full dataset (maintainers only)
+	$(PY) scripts/build_seed.py
+
+data: db-up migrate seed ## One command to a working database with data
 
 simulate: ## Generate reproducible simulated sessions (see docs/SIMULATION.md)
 	$(PY) scripts/simulate.py
+
+simulate-aa: ## A/A run: every treatment effect set to 1.0, for the false-positive check
+	$(PY) scripts/simulate.py --aa-test --label aa
 
 metrics: ## Recompute every number quoted in the README -> reports/metrics.json
 	$(PY) scripts/metrics.py
