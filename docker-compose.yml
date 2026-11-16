@@ -1,0 +1,22 @@
+# CartIQ local stack. Postgres ships with pgvector preinstalled (Module 6 needs it).
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: cartiq-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cartiq
+      POSTGRES_PASSWORD: cartiq
+      POSTGRES_DB: cartiq
+    ports:
+      - '5433:5432'
+    volumes:
+      - cartiq-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U cartiq -d cartiq']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  cartiq-pgdata:

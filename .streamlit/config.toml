@@ -1,0 +1,15 @@
+# CartIQ "Ember" theme — warm charcoal + amber. Matches apps/web/app/globals.css
+# so the storefront and the console read as one product.
+[theme]
+base = "dark"
+primaryColor = "#F0A020"
+backgroundColor = "#1A1512"
+secondaryBackgroundColor = "#231C18"
+textColor = "#F5EDE4"
+font = "sans serif"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false

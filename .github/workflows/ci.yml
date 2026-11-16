@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Mock provider: CI never needs an API key.
+  LLM_PROVIDER: mock
+  EMBEDDING_PROVIDER: mock
+  FLAG_HASH_SALT: cartiq-v1
+  DATABASE_URL: postgresql://cartiq:cartiq@localhost:5432/cartiq?schema=public
+  DIRECT_URL: postgresql://cartiq:cartiq@localhost:5432/cartiq?schema=public
+
+jobs:
+  web:
+    name: web (lint, typecheck, vitest, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @cartiq/web exec prisma generate
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm --filter @cartiq/web build
+
+  python:
+    name: python (ruff, mypy, pytest) — api + console
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: cartiq
+          POSTGRES_PASSWORD: cartiq
+          POSTGRES_DB: cartiq
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U cartiq -d cartiq"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: pip install -e "apps/api[dev]" -r requirements.txt
+      - run: ruff check apps/api apps/console scripts streamlit_app.py
+      - run: ruff format --check apps/api apps/console scripts streamlit_app.py
+      - run: mypy apps/api/src apps/console/cartiq_console
+      # Covers the stats engine and the models; gate is set in pyproject.toml.
+      - run: pytest apps/api
+      - run: python scripts/build_models.py --dry-run
+      # The Streamlit entrypoint must at least import cleanly: a broken console
+      # would otherwise only be discovered on deploy.
+      - run: python -c "import sys; sys.path[:0]=['apps/api/src','apps/console']; import cartiq_console.app"

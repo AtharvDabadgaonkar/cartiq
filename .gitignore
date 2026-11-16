@@ -1,0 +1,38 @@
+node_modules/
+.pnpm-store/
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Data: raw datasets are large + licence-restricted (Kaggle). Seed sample IS committed.
+data/raw/*
+!data/raw/.gitkeep
+
+# Generated artefacts (reports/metrics.json IS committed; it is the evidence for the README)
+reports/charts/
+apps/web/.vercel/
+playwright-report/
+test-results/
+.DS_Store

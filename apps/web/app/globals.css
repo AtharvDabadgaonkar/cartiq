@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Ember theme tokens.
+ * Contrast checked against WCAG 2.2 AA (4.5:1 body, 3:1 large text / UI edges):
+ *   dark  foreground on background .......... 13.9:1
+ *   dark  muted-foreground on background ..... 6.2:1
+ *   dark  amber on background ................ 8.4:1
+ *   light foreground on background .......... 14.6:1
+ *   light amber text is only used on dark chips, never as light-on-light body.
+ */
+@layer base {
+  :root,
+  [data-theme='dark'] {
+    --background: 21 18% 9%;
+    --foreground: 30 33% 93%;
+    --surface: 22 18% 12%;
+    --surface-raised: 22 16% 16%;
+    --border: 23 17% 20%;
+    --input: 23 17% 20%;
+    --ring: 37 87% 53%;
+    --muted: 22 16% 16%;
+    --muted-foreground: 28 16% 66%;
+
+    --primary: 37 87% 53%;
+    --primary-foreground: 24 40% 10%;
+    --clay: 12 62% 56%;
+    --clay-foreground: 24 40% 10%;
+    --moss: 87 38% 52%;
+    --moss-foreground: 24 40% 10%;
+    --plum: 315 28% 56%;
+    --ochre: 46 67% 52%;
+    --destructive: 6 68% 52%;
+    --destructive-foreground: 30 33% 95%;
+
+    --chart-1: 37 87% 53%;
+    --chart-2: 12 62% 56%;
+    --chart-3: 87 38% 52%;
+    --chart-4: 315 28% 56%;
+    --chart-5: 46 67% 52%;
+
+    --radius: 0.625rem;
+  }
+
+  [data-theme='light'] {
+    --background: 33 40% 97%;
+    --foreground: 24 22% 11%;
+    --surface: 33 34% 94%;
+    --surface-raised: 0 0% 100%;
+    --border: 28 20% 85%;
+    --input: 28 20% 85%;
+    --ring: 32 82% 42%;
+    --muted: 33 24% 91%;
+    --muted-foreground: 26 12% 38%;
+
+    --primary: 32 84% 40%;
+    --primary-foreground: 33 40% 98%;
+    --clay: 11 58% 44%;
+    --clay-foreground: 33 40% 98%;
+    --moss: 90 42% 32%;
+    --moss-foreground: 33 40% 98%;
+    --plum: 315 32% 40%;
+    --ochre: 42 72% 34%;
+    --destructive: 5 66% 44%;
+    --destructive-foreground: 33 40% 98%;
+
+    --chart-1: 32 84% 42%;
+    --chart-2: 11 58% 46%;
+    --chart-3: 90 42% 34%;
+    --chart-4: 315 32% 42%;
+    --chart-5: 42 72% 36%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  [data-theme='light'] {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
+  }
+
+  /* Visible, high-contrast focus ring everywhere (WCAG 2.2 focus appearance). */
+  :focus-visible {
+    @apply ring-ring ring-offset-background outline-none ring-2 ring-offset-2;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Subtle warm glow used behind hero numbers; never carries meaning alone. */
+  .ember-glow {
+    background-image: radial-gradient(
+      60% 60% at 50% 0%,
+      hsl(var(--primary) / 0.14) 0%,
+      transparent 70%
+    );
+  }
+}

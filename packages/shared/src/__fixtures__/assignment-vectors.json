@@ -1,0 +1,66 @@
+{
+  "_comment": "Shared FNV-1a/bucketing test vectors. TS and Python assignment implementations must both reproduce these exactly. Regenerate with scripts/gen_assignment_vectors.mjs",
+  "salt": "cartiq-v1",
+  "experiment_key": "flagship_assistant_nudges",
+  "bucket_count": 10000,
+  "hashes": [
+    {
+      "input": "cartiq-v1:flagship_assistant_nudges:user_0",
+      "fnv1a32": 1203548795
+    },
+    {
+      "input": "cartiq-v1:flagship_assistant_nudges:user_1",
+      "fnv1a32": 1186771176
+    },
+    {
+      "input": "cartiq-v1:flagship_assistant_nudges:user_42",
+      "fnv1a32": 790047151
+    },
+    {
+      "input": "cartiq-v1:flagship_assistant_nudges:user_999",
+      "fnv1a32": 2810951286
+    },
+    {
+      "input": "cartiq-v1:flagship_assistant_nudges:a",
+      "fnv1a32": 1889237178
+    },
+    {
+      "input": "cartiq-v1:flagship_assistant_nudges:Ωmega-user",
+      "fnv1a32": 1001898220
+    },
+    {
+      "input": "cartiq-v1:flagship_assistant_nudges:1234567890abcdef",
+      "fnv1a32": 3651549993
+    }
+  ],
+  "buckets": [
+    {
+      "unit_id": "user_0",
+      "bucket": 8795
+    },
+    {
+      "unit_id": "user_1",
+      "bucket": 1176
+    },
+    {
+      "unit_id": "user_42",
+      "bucket": 7151
+    },
+    {
+      "unit_id": "user_999",
+      "bucket": 1286
+    },
+    {
+      "unit_id": "a",
+      "bucket": 7178
+    },
+    {
+      "unit_id": "Ωmega-user",
+      "bucket": 8220
+    },
+    {
+      "unit_id": "1234567890abcdef",
+      "bucket": 9993
+    }
+  ]
+}

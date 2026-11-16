@@ -1,0 +1,6 @@
+# Dependency file for Streamlit Community Cloud.
+# The console imports the analytics package directly rather than calling it over
+# HTTP, so there is one implementation of every metric and no extra service.
+streamlit>=1.41,<2
+altair>=5.4,<6
+./apps/api
