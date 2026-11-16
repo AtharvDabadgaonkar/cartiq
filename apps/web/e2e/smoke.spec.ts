@@ -2,8 +2,8 @@ import { expect, test } from '@playwright/test';
 
 /** Phase 1 smoke: the shell renders, the IA is navigable, the API answers. */
 
-test('landing page states the demo and data-honesty position', async ({ page }) => {
-  await page.goto('/');
+test('about page states the demo and data-honesty position', async ({ page }) => {
+  await page.goto('/about');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   await expect(page.getByRole('note')).toContainText('No real payments');
   await expect(page.getByText('labelled')).toBeVisible();

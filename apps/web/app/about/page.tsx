@@ -40,7 +40,7 @@ const NARRATIVE = [
 const PHASES = [
   { n: 1, name: 'Foundation', done: true },
   { n: 2, name: 'Data & simulator', done: true },
-  { n: 3, name: 'Storefront', done: false },
+  { n: 3, name: 'Storefront', done: true },
   { n: 4, name: 'Diagnose', done: false },
   { n: 5, name: 'Abandonment', done: false },
   { n: 6, name: 'AI assistant', done: false },
@@ -49,7 +49,9 @@ const PHASES = [
   { n: 9, name: 'Polish & ship', done: false },
 ];
 
-export default function HomePage() {
+export const metadata = { title: 'About this project' };
+
+export default function AboutPage() {
   return (
     <>
       <DemoBanner />
@@ -65,6 +67,9 @@ export default function HomePage() {
             CartIQ
           </Link>
           <nav className="flex items-center gap-1">
+            <Link href="/" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+              Shop
+            </Link>
             <Link href="/console" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Console
             </Link>
@@ -75,7 +80,7 @@ export default function HomePage() {
 
       <main id="main" className="ember-glow">
         <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-          <Badge variant="amber">Portfolio build · Phase 2 of 9 complete</Badge>
+          <Badge variant="amber">Portfolio build · Phase 3 of 9 complete</Badge>
           <h1 className="mt-5 max-w-3xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">
             Most commerce teams know their conversion rate.
             <span className="text-primary">
@@ -89,12 +94,12 @@ export default function HomePage() {
             A/B experiment studio.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/console" className={buttonVariants({ size: 'lg' })}>
-              Open the console <ArrowRight aria-hidden className="h-4 w-4" />
+            <Link href="/" className={buttonVariants({ size: 'lg' })}>
+              Browse the demo store <ArrowRight aria-hidden className="h-4 w-4" />
             </Link>
-            <span className="border-border text-muted-foreground inline-flex h-11 items-center rounded-md border border-dashed px-6 text-sm">
-              Demo storefront lands in Phase 3
-            </span>
+            <Link href="/console" className={buttonVariants({ size: 'lg', variant: 'outline' })}>
+              Open the console
+            </Link>
           </div>
           <p className="text-muted-foreground mt-6 max-w-2xl text-sm">
             <strong className="text-foreground">On data honesty:</strong> diagnosis runs on a real

@@ -80,3 +80,47 @@ jobs:
       # The Streamlit entrypoint must at least import cleanly: a broken console
       # would otherwise only be discovered on deploy.
       - run: python -c "import sys; sys.path[:0]=['apps/api/src','apps/console']; import cartiq_console.app"
+
+  e2e:
+    name: e2e (Playwright storefront journeys)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: cartiq
+          POSTGRES_PASSWORD: cartiq
+          POSTGRES_DB: cartiq
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U cartiq -d cartiq"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: pnpm install --frozen-lockfile
+      - run: pip install -e "apps/api[dev]"
+      - run: pnpm --filter @cartiq/web exec prisma migrate deploy
+      - run: python scripts/build_models.py
+      # The storefront needs a catalog to render, so the committed seed is the
+      # fixture: the suite exercises real products, not mocks.
+      - run: python scripts/seed.py
+      - run: pnpm --filter @cartiq/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @cartiq/web build
+      - run: pnpm --filter @cartiq/web exec playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7

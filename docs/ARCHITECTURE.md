@@ -181,6 +181,36 @@ idempotent: event ids are UUIDv5 over the source's natural key, so a re-run
 inserts nothing. Every API response and every console surface reports which sources it
 covers. This is what makes the honesty rule enforceable rather than aspirational.
 
+### 2.9 The storefront's server/client boundary
+
+Catalog reads are server components talking to Prisma; everything interactive
+(cart, tracking, forms) is a client component. The seam is enforced, not just
+intended:
+
+- `lib/catalog.ts` starts with `import 'server-only'`, so importing it from a
+  client component is a build error rather than a runtime one.
+- Types and pure helpers a client component needs live in `lib/catalog-shared.ts`.
+  Mixing the two shipped Prisma to the browser once; the guard exists because of
+  that, not in anticipation of it.
+
+Storefront routes are `force-dynamic`. The catalog comes from Postgres, so
+prerendering would make a build need a live database (CI's web job has none) and
+would freeze the shop at build time.
+
+### 2.10 Events are emitted where the action happens
+
+Every funnel step is tracked by the component that performs it — the cart
+provider emits `add_to_cart`/`remove_from_cart`, the checkout steps emit their
+own step events — rather than inferred from route changes. A route-derived
+funnel measures navigation, not intent, and silently counts a back-button press
+as a step.
+
+One subtlety that cost a bug: React runs a child's effect before its parent's,
+so a component tracking on mount was stamped with the page it had just left
+(`payment_step` on `/checkout/shipping`). `useTracker` now reads
+`window.location.pathname` at call time, so an event always carries the page it
+actually happened on.
+
 ## 3. Repository layout
 
 | Path | Contents |
@@ -227,4 +257,6 @@ Deployed, all free tier:
 | Catalog | pytest | Derived fields flagged; absent fields stay NULL |
 | Simulator | pytest | Determinism; an effect lands only on its own transition; A/A is exactly zero |
 | Simulator docs | pytest | Every parameter in code is documented in SIMULATION.md |
-| Journeys | Playwright | Storefront flows and event emission (Phase 3) |
+| Storefront journeys | Playwright | Browse → search → cart → checkout → confirmation, on desktop and mobile |
+| Event emission | Playwright | Every funnel event fires once, in order, stamped with the right page |
+| Accessibility | Playwright | Skip link, labelled controls, announced errors, focus management |

@@ -12,11 +12,27 @@ proves their impact through a built-in A/B experiment studio.
 
 **Diagnose → Intervene → Measure → Scale**
 
-> ### 🚧 Build status: Phase 2 of 9 complete (data)
+> ### 🚧 Build status: Phase 3 of 9 complete (storefront)
 >
 > Every figure below is produced by `make metrics` into
 > [`reports/metrics.json`](reports/metrics.json) and carries its own provenance.
 > None are hand-written. Screenshots and the live demo link land in Phase 9.
+
+## The storefront
+
+A working demo shop over the real catalog: home, search, category and product
+pages, a persistent cart, and a three-step checkout (shipping → payment →
+confirmation). Every funnel step emits its event from the component that
+performs it, so the funnel measures intent rather than navigation.
+
+Two deliberate choices a reader should notice:
+
+- **There is no card-number field anywhere in this app.** A demo that renders
+  one invites a visitor to type a real card into a toy. The payment step shows a
+  fixed, obviously fake method and the button only records the `purchase` event.
+- **Nothing the source data lacks is invented.** Products show "not in source
+  data" for brand and GTIN, derived values are badged `derived`, and the image
+  placeholder says there is no image rather than substituting a stock photo.
 
 ## The data, as loaded
 
@@ -160,7 +176,7 @@ written up with their trade-offs in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 | --- | --- | --- |
 | 1 | Foundation — monorepo, schema, tracking SDK, console shell, CI, mock LLM | ✅ |
 | 2 | Data — ingestion, seed sample, catalog, session simulator | ✅ |
-| 3 | Storefront — pages, checkout, event tracking, Playwright | — |
+| 3 | Storefront — pages, checkout, event tracking, Playwright | ✅ |
 | 4 | Diagnose — SQL models, funnel, KPIs, segmentation, friction | — |
 | 5 | Abandonment — risk model, metrics report, nudge engine | — |
 | 6 | AI assistant — pgvector retrieval, chat, recommendations, eval | — |

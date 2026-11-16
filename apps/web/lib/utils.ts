@@ -5,8 +5,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(value: number, currency = 'USD') {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(value);
+/** The catalog is a UK retailer's, so prices are GBP unless told otherwise. */
+export function formatCurrency(value: number, currency = 'GBP') {
+  return new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(value);
 }
 
 export function formatPercent(value: number, digits = 1) {
