@@ -222,6 +222,7 @@ written up with their trade-offs in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 | [Experiment readout](docs/EXPERIMENT_READOUT.md) | Generated from a real run in Phase 7 |
 | [Launch plan](docs/LAUNCH_PLAN.md) | Flag rollout stages, go/no-go criteria, rollback triggers |
 | [Metrics dictionary](docs/METRICS_DICTIONARY.md) | Every metric: definition, formula, grain, provenance |
+| [Deployment](docs/DEPLOYMENT.md) | Supabase + Streamlit Cloud + Vercel, in order, with the free-tier limits |
 
 ## Build phases
 
