@@ -49,23 +49,39 @@ export class EventRecorder {
   }
 
   /**
-   * Forces a flush so queued events are posted before an assertion.
+   * Forces a flush and waits for the delivery to actually complete.
    *
-   * Calls the tracker's own flush through the `window.__cartiq` debug hook.
-   * Synthetic unload events are not a reliable trigger (visibilityState does
-   * not change, and a sendBeacon body is not readable from a test), so the
-   * hook is what makes these assertions deterministic.
+   * Waiting a fixed number of milliseconds made these assertions flaky under
+   * parallel workers, because two pages share one server and a flush can take
+   * longer than the guess. This waits for the POST itself, so the only timing
+   * assumption left is the server responding at all.
+   *
+   * Uses the `window.__cartiq` debug hook rather than a synthetic unload
+   * event: visibilityState does not change for a dispatched event, and a
+   * sendBeacon body is not readable from a test.
    */
   async flush(): Promise<void> {
-    await this.page
-      .evaluate(async () => {
-        const hook = (window as Window & { __cartiq?: { flush: () => Promise<void> } }).__cartiq;
-        await hook?.flush();
+    const pending = await this.page
+      .evaluate(() => {
+        const hook = (window as Window & { __cartiq?: { pending: () => unknown[] } }).__cartiq;
+        return hook ? hook.pending().length : 0;
       })
-      .catch(() => {
-        // The page may be navigating; the next flush will pick the events up.
-      });
-    await this.page.waitForTimeout(250);
+      .catch(() => 0);
+    if (pending === 0) return;
+
+    await Promise.all([
+      this.page
+        .waitForResponse((response) => response.url().endsWith('/api/events'), { timeout: 5000 })
+        .catch(() => null),
+      this.page
+        .evaluate(async () => {
+          const hook = (window as Window & { __cartiq?: { flush: () => Promise<void> } }).__cartiq;
+          await hook?.flush();
+        })
+        .catch(() => {
+          // The page may be navigating; the next flush picks the events up.
+        }),
+    ]);
   }
 
   /** Waits until at least `count` events of a type have been captured. */
@@ -77,7 +93,10 @@ export class EventRecorder {
       if (found.length >= count) return found;
       await this.page.waitForTimeout(150);
     }
-    throw new Error(`expected at least ${count} "${type}" events, saw ${this.ofType(type).length}`);
+    throw new Error(
+      `expected at least ${count} "${type}" events, saw ${this.ofType(type).length}. ` +
+        `Captured in order: ${this.types().join(', ') || 'nothing'}`,
+    );
   }
 
   async waitFor(type: string, timeoutMs = 8000): Promise<CapturedEvent> {

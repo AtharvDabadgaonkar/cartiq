@@ -190,12 +190,34 @@ def test_model_beats_the_majority_class_baseline():
 
 @pytestmark_model
 def test_model_is_calibrated_enough_to_threshold_on():
+    """Each bin's observed rate must sit within sampling error of its prediction.
+
+    A fixed tolerance would be arbitrary: the same model looks well calibrated
+    on 47k carts and badly calibrated on 7k purely because small bins are
+    noisy. Comparing against the binomial standard error tests calibration
+    itself rather than how much data happened to be loaded.
+    """
+    import math
+
     result = train_abandonment_model()
-    # Only bins with enough carts to mean anything.
     solid = result.calibration[result.calibration["count"] >= 100]
-    assert not solid.empty
-    error = (solid["predicted"] - solid["observed"]).abs().max()
-    assert error < 0.05, f"worst calibration gap {error:.3f} is too wide to threshold on"
+    assert not solid.empty, "no bin had enough carts to judge calibration"
+
+    worst = 0.0
+    for _, row in solid.iterrows():
+        observed, predicted, n = row["observed"], row["predicted"], int(row["count"])
+        standard_error = math.sqrt(max(observed * (1 - observed), 1e-9) / n)
+        # Three standard errors, with a 1pp floor so a near-degenerate bin does
+        # not demand impossible precision.
+        tolerance = max(3 * standard_error, 0.01)
+        gap = abs(predicted - observed)
+        worst = max(worst, gap / tolerance)
+        assert gap <= tolerance, (
+            f"bin {row['bin_lower']:.1f}-{row['bin_upper']:.1f} (n={n:,}): "
+            f"predicted {predicted:.3f} vs observed {observed:.3f}, "
+            f"gap {gap:.3f} exceeds {tolerance:.3f} (3 standard errors)"
+        )
+    assert worst > 0
 
 
 @pytestmark_model
