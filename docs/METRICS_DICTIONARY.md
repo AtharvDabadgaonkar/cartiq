@@ -169,7 +169,17 @@ against the population, so a label cannot drift away from the data.
 | `abandonment_model_average_precision` | Average precision of the selected model | model_eval |
 | `abandonment_model_baseline_average_precision` | Average precision of always predicting the majority class | model_eval |
 | `abandonment_model_brier_score` | Mean squared error of the predicted probability; lower is better | model_eval |
-| `abandonment_model_selected` | Model chosen by average precision | model_eval |
+| `abandonment_model_selected` | Model chosen by Brier score | model_eval |
+
+**Why selection is on Brier score but the headline is average precision.**
+These answer different questions. Average precision is the clearest *summary*
+of how well the model separates carts, so it leads the report. Brier score
+decides which model *ships*, because the nudge thresholds on a probability and
+Brier is a proper scoring rule — it penalises a confident wrong answer, so it
+rewards calibration and ranking together. Selecting on average precision alone
+once preferred the boosted model by 0.008 AP on one split while that model was
+worse on AUC and 1pp worse on Brier, putting a 7pp kink in the reliability
+curve exactly at the nudge threshold.
 
 **Why average precision is the headline, not AUC.** Roughly 80% of carts are
 abandoned, so a model that always answers "abandoned" already scores 0.80

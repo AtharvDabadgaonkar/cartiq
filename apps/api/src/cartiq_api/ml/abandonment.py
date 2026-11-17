@@ -215,7 +215,14 @@ def train_abandonment_model(
         fitted[name] = pipeline
         probabilities[name] = probability
 
-    best = max(metrics, key=lambda name: metrics[name]["average_precision"])
+    # Selected on Brier score, not average precision. The nudge engine fires on
+    # a probability threshold (0.75 / 0.85), so a model whose probabilities are
+    # miscalibrated is unusable however well it ranks. Brier is a proper scoring
+    # rule: it rewards calibration and discrimination together. Average
+    # precision rewards ranking alone, and on some splits it prefers the boosted
+    # model by ~0.008 AP while that model is worse on AUC and clearly worse on
+    # calibration -- which then shows up as a 7pp gap in the reliability curve.
+    best = min(metrics, key=lambda name: metrics[name]["brier_score"])
 
     # Baseline to compare against: always predict the majority class.
     majority = float(y_test.mean())

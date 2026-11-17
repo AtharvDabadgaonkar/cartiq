@@ -43,7 +43,7 @@ def main() -> int:
             f"  {name:<26} auc={metrics['roc_auc']:.3f} "
             f"ap={metrics['average_precision']:.3f} brier={metrics['brier_score']:.4f}"
         )
-    print(f"\nbest by average precision: {result.best_model}")
+    print(f"\nbest by Brier score (proper, rewards calibration): {result.best_model}")
     if result.best_model == "logistic_regression":
         print(
             "  the boosted model did not beat the baseline; the complexity is not earning its keep"
