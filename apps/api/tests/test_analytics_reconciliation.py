@@ -20,8 +20,9 @@ def _models_ready() -> bool:
         return False
     try:
         with get_engine().connect() as connection:
-            connection.execute(text("SELECT 1 FROM mart_funnel LIMIT 1"))
-        return True
+            rows = connection.execute(text("SELECT COUNT(*) FROM mart_funnel")).scalar()
+        # An empty table is not a passing test, it is a missing fixture.
+        return bool(rows)
     except Exception:  # a missing view is a skip, not a failure
         return False
 

@@ -75,6 +75,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @cartiq/web exec prisma migrate deploy
       - run: python scripts/build_models.py
+      # The analytics tests reconcile against real rows, so CI needs data; the
+      # committed seed is the designed fixture.
+      - run: python scripts/seed.py
+      # Plus a small simulation run: the seed alone has ~1.1k carting sessions,
+      # below the 2,000 the abandonment model requires for an honest
+      # evaluation, and that model should not go untested in CI.
+      - run: python scripts/simulate.py --sessions 60000 --label ci
       - run: ruff check apps/api apps/console scripts streamlit_app.py
       - run: ruff format --check apps/api apps/console scripts streamlit_app.py
       - run: mypy apps/api/src apps/console/cartiq_console
