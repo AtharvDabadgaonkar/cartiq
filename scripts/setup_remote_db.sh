@@ -27,6 +27,14 @@ echo "==> building SQL models"
 echo "==> loading the committed seed"
 "$PY" "$ROOT/scripts/seed.py"
 
+# The seed's 12k simulated sessions give ~1.1k carts, under the 2,000 the
+# abandonment model needs. Set SIM_SESSIONS to add a larger run; 120000 lands
+# around 300MB in total, inside Supabase's 500MB free tier.
+if [[ -n "${SIM_SESSIONS:-}" ]]; then
+  echo "==> simulating $SIM_SESSIONS sessions"
+  "$PY" "$ROOT/scripts/simulate.py" --sessions "$SIM_SESSIONS" --label hosted
+fi
+
 echo
 echo "done. Verify with:"
-echo "  psql \"\$DATABASE_URL\" -c 'SELECT data_source, count(*) FROM events GROUP BY 1;'"
+echo "  psql \"\$DATABASE_URL\" -c 'SELECT source, count(*) FROM events GROUP BY 1;'"
