@@ -33,17 +33,24 @@ apps/api/.venv/bin/python scripts/seed.py
 
 ### Watch the size limit
 
-Supabase's free tier caps the database at **500 MB**. The committed seed
-(~117k events) fits comfortably. A full `make simulate` run is ~1.5M events and
-will **not** fit. If you want simulated sessions in the hosted copy:
+Supabase's free tier caps the database at **500 MB**. The committed seed is
+120,706 events (84,473 real + 36,233 simulated, per `data/seed/manifest.json`)
+and fits comfortably. A full `make simulate` run is ~1.5M events and will
+**not** fit.
+
+The seed's 12,000 simulated sessions are enough for the overview, funnel and
+segment pages, but they yield only ~1.1k carting sessions -- below the 2,000
+the abandonment model requires -- so that page will honestly report too little
+data. To light it up, add a larger run:
 
 ```bash
 apps/api/.venv/bin/python scripts/simulate.py --sessions 120000
 ```
 
-That is enough for the funnel and segment pages to be meaningful. It is *not*
-enough to power the Phase 7 experiment, which needs ~500k sessions — run that
-one locally and publish the readout rather than the raw events.
+That gives ~13k carting sessions, enough to train and calibrate the
+abandonment model, and lands around 300 MB with the seed. It is *not* enough
+to power the Phase 7 experiment, which needs ~500k sessions — run that one
+locally and publish the readout rather than the raw events.
 
 ---
 
