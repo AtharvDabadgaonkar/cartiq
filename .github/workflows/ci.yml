@@ -58,7 +58,11 @@ jobs:
         with:
           python-version: '3.11'
           cache: pip
-      - run: pip install -e "apps/api[dev]" -r requirements.txt
+      # NOT `-r requirements.txt`: that file installs ./apps/api for Streamlit
+      # Cloud, and combining it with the editable install asks pip for the same
+      # package twice, which it refuses. The dev extras already pull in
+      # streamlit and altair for the console checks.
+      - run: pip install -e "apps/api[dev]"
       # The loader integration tests need the schema; without this they skip,
       # and the code that writes the warehouse would go untested in CI.
       - uses: pnpm/action-setup@v4

@@ -31,6 +31,7 @@ dev = [
   "mypy>=1.14,<2",
   "pandas-stubs>=2.2,<3",
   "streamlit>=1.41,<2",
+  "altair>=5.4,<6",
 ]
 
 [tool.setuptools.packages.find]

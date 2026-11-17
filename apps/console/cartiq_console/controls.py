@@ -44,12 +44,19 @@ def slice_options(data_source: str) -> dict[str, Any]:
 
 @st.cache_data(ttl=120, show_spinner=False)
 def available_sources() -> list[str]:
-    """Sources that actually have sessions loaded, most data first."""
+    """Sources that actually have sessions loaded, most data first.
+
+    Returns an empty list when the database is unreachable or unmigrated, so a
+    deployment without a database shows a clear message instead of a traceback.
+    """
     statement = text(
         "SELECT data_source, COUNT(*) n FROM int_sessions GROUP BY 1 ORDER BY n DESC"
     )
-    with engine().connect() as connection:
-        return [row[0] for row in connection.execute(statement)]
+    try:
+        with engine().connect() as connection:
+            return [row[0] for row in connection.execute(statement)]
+    except Exception:  # noqa: BLE001 - a missing database is a message, not a crash
+        return []
 
 
 def filter_sidebar(*, funnel_only: bool = False, key: str = "f") -> Filters:
@@ -62,6 +69,14 @@ def filter_sidebar(*, funnel_only: bool = False, key: str = "f") -> Filters:
         key: Widget key prefix, so two pages do not share state.
     """
     sources = available_sources()
+    if not sources:
+        st.sidebar.warning("No database connection.")
+        st.warning(
+            "This console needs a database. Set `DATABASE_URL` (a Streamlit secret when "
+            "deployed), then run `make migrate && make seed`.",
+            icon=":material/database_off:",
+        )
+        st.stop()
     if funnel_only:
         sources = [s for s in sources if s in ("SIMULATED", "LIVE_DEMO")] or sources
 
