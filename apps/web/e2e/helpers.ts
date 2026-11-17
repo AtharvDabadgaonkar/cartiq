@@ -26,8 +26,12 @@ export class EventRecorder {
     const recorder = new EventRecorder(page);
     page.on('request', (request: Request) => {
       if (!request.url().endsWith('/api/events') || request.method() !== 'POST') return;
+      // `postData()` returns null for a Blob body, which is exactly what
+      // navigator.sendBeacon sends on unload, so fall back to the raw buffer.
+      const raw = request.postData() ?? request.postDataBuffer()?.toString('utf8');
+      if (!raw) return;
       try {
-        const body = JSON.parse(request.postData() ?? '{}') as { events?: CapturedEvent[] };
+        const body = JSON.parse(raw) as { events?: CapturedEvent[] };
         recorder.events.push(...(body.events ?? []));
       } catch {
         // A malformed body is itself a failure, surfaced by a missing event.
@@ -47,15 +51,33 @@ export class EventRecorder {
   /**
    * Forces a flush so queued events are posted before an assertion.
    *
-   * Dispatches `pagehide`, not `visibilitychange`: the provider only flushes on
-   * visibilitychange when `document.visibilityState` is "hidden", and a
-   * synthetic event does not change that, so nothing would actually be sent.
+   * Calls the tracker's own flush through the `window.__cartiq` debug hook.
+   * Synthetic unload events are not a reliable trigger (visibilityState does
+   * not change, and a sendBeacon body is not readable from a test), so the
+   * hook is what makes these assertions deterministic.
    */
   async flush(): Promise<void> {
-    await this.page.evaluate(() => {
-      window.dispatchEvent(new Event('pagehide'));
-    });
-    await this.page.waitForTimeout(300);
+    await this.page
+      .evaluate(async () => {
+        const hook = (window as Window & { __cartiq?: { flush: () => Promise<void> } }).__cartiq;
+        await hook?.flush();
+      })
+      .catch(() => {
+        // The page may be navigating; the next flush will pick the events up.
+      });
+    await this.page.waitForTimeout(250);
+  }
+
+  /** Waits until at least `count` events of a type have been captured. */
+  async waitForCount(type: string, count: number, timeoutMs = 8000): Promise<CapturedEvent[]> {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      await this.flush();
+      const found = this.ofType(type);
+      if (found.length >= count) return found;
+      await this.page.waitForTimeout(150);
+    }
+    throw new Error(`expected at least ${count} "${type}" events, saw ${this.ofType(type).length}`);
   }
 
   async waitFor(type: string, timeoutMs = 8000): Promise<CapturedEvent> {
@@ -96,4 +118,15 @@ export async function addFirstProductToCart(page: Page): Promise<void> {
   // "Cart, 0 items" also matches a lazy \d+, so require a non-zero count:
   // otherwise this returns before the item is actually in the cart.
   await page.getByRole('link', { name: /^Cart, [1-9]\d* item/ }).waitFor({ state: 'visible' });
+  // The badge updates on render but the cart is persisted in an effect, so a
+  // navigation here can outrun the write and land on an empty cart.
+  await page.waitForFunction(() => {
+    try {
+      return (
+        (JSON.parse(window.localStorage.getItem('cartiq.cart') ?? '[]') as unknown[]).length > 0
+      );
+    } catch {
+      return false;
+    }
+  });
 }

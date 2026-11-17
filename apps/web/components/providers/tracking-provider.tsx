@@ -67,6 +67,18 @@ export function TrackingProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    /**
+     * Debug/e2e hook. Flushing otherwise only happens on a timer, at the batch
+     * size, or on unload via sendBeacon — and a beacon's body is not reliably
+     * readable from a test, which makes the funnel assertions flaky. Exposing
+     * an explicit flush keeps those tests deterministic. It carries no secrets
+     * and cannot emit anything the page could not already emit.
+     */
+    (window as Window & { __cartiq?: unknown }).__cartiq = {
+      flush: (options?: { final?: boolean }) => instance.flush(options),
+      pending: () => instance.pending(),
+    };
+
     trackerRef.current = instance;
     return instance;
   }, []);
