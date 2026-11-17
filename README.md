@@ -238,8 +238,15 @@ written up with their trade-offs in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 | 8 | Scale — insights copilot with SQL safety, catalog readiness | — |
 | 9 | Polish & ship — overview story, PRD, README metrics, deploy to Vercel + Streamlit + Supabase | — |
 
+## Licence and data
 
+Code: MIT.
 
+The real dataset is **Online Retail II** from the UCI Machine Learning
+Repository, used under **CC BY 4.0**:
+
+> Chen, D. (2019). *Online Retail II* [Dataset]. UCI Machine Learning
+> Repository. <https://doi.org/10.24432/C5CG6D>. Licensed CC BY 4.0.
 
 It downloads without credentials, so `make ingest` works on a clean checkout.
 The committed seed in `data/seed/` is a genuine extract of it (the earliest
