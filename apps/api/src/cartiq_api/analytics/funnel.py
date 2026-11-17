@@ -36,8 +36,12 @@ def funnel(filters: Filters | None = None) -> pd.DataFrame:
 
     statement = text(
         f"""
+        -- COUNT(*), not COUNT(DISTINCT session_id): mart_funnel emits exactly
+        -- one row per session per reached step, so they are equivalent and the
+        -- distinct sort costs seconds at this row count. A reconciliation test
+        -- checks the result against COUNT(DISTINCT ...) straight off `events`.
         SELECT f.step_key, f.step_index, f.step_label,
-               COUNT(DISTINCT f.session_id) AS sessions
+               COUNT(*) AS sessions
         FROM mart_funnel f
         WHERE {where}
         GROUP BY f.step_key, f.step_index, f.step_label
@@ -96,7 +100,7 @@ def funnel_by_dimension(dimension: str, filters: Filters | None = None) -> pd.Da
         f"""
         SELECT f.{dimension}::text AS dimension_value,
                f.step_key, f.step_index, f.step_label,
-               COUNT(DISTINCT f.session_id) AS sessions
+               COUNT(*) AS sessions
         FROM mart_funnel f
         WHERE {where}
         GROUP BY 1, 2, 3, 4

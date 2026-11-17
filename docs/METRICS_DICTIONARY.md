@@ -158,6 +158,68 @@ order value and tenure, **standardised first** — without that, spend alone wou
 decide the clusters. Descriptions are derived from where each cluster sits
 against the population, so a label cannot drift away from the data.
 
+## Phase 5 entries — abandonment risk and nudges
+
+### Abandonment risk model
+
+| Metric | Definition | Provenance |
+| --- | --- | --- |
+| `abandonment_model_rows` | Carting sessions trained and evaluated on | model_eval |
+| `abandonment_model_roc_auc` | ROC AUC on a held-out split (0.5 = coin flip) | model_eval |
+| `abandonment_model_average_precision` | Average precision of the selected model | model_eval |
+| `abandonment_model_baseline_average_precision` | Average precision of always predicting the majority class | model_eval |
+| `abandonment_model_brier_score` | Mean squared error of the predicted probability; lower is better | model_eval |
+| `abandonment_model_selected` | Model chosen by average precision | model_eval |
+
+**Why average precision is the headline, not AUC.** Roughly 80% of carts are
+abandoned, so a model that always answers "abandoned" already scores 0.80
+average precision, 1.00 recall and 0.89 F1. Quoting precision or F1 without
+that baseline beside it would be meaningless. The baseline is reported as a row
+in the same table.
+
+**Why calibration is tracked at all.** The nudge engine fires on a *threshold*
+of predicted risk, so the probability has to mean what it says. A model can
+rank well (good AUC) and still be badly calibrated, which would nudge the wrong
+carts. The reliability curve reports predicted vs observed per probability bin
+*with the bin counts*, because a bin holding twelve carts should not be read
+like one holding four thousand. A test fails the build if any well-populated
+bin is off by more than 5 percentage points.
+
+**Leakage.** Features come from `mart_cart_sessions`, which excludes every
+funnel step after the cart is created. A model that knows the shopper reached
+the payment step scores beautifully and cannot be deployed, because by then the
+decision is already made.
+
+### Nudge engine
+
+Rules, not a model: the model produces a calibrated score, the rules decide
+what — if anything — to say.
+
+| Order | Nudge | Flag | Fires when |
+| --- | --- | --- | --- |
+| 0 | *(none)* | — | risk < 75% |
+| 1 | `free_shipping_threshold` | `nudge_free_shipping` | risk ≥ 75%, shipping charged, within £15 of the threshold |
+| 2 | `saved_cart_reminder` | `nudge_saved_cart` | risk ≥ 85% |
+| 3 | `low_stock_note` | `nudge_low_stock` | risk ≥ 75% and more than one item |
+
+**At most one nudge per cart.** Stacking messages on a hesitant shopper turns a
+helpful nudge into a dark pattern, and it would make the Phase 7 experiment
+uninterpretable — you could not say which message moved anyone.
+
+**The 75% threshold is not the classifier's 0.5.** At an ~80% base rate, 0.5
+fires on virtually every cart and the nudge stops meaning anything.
+
+Thresholds live in `packages/shared/src/nudges.ts` and
+`apps/api/src/cartiq_api/nudges.py`; a parity test fails the build if they
+drift, because the storefront decides in TypeScript and the console explains
+the same ladder in Python.
+
+### Guardrail signals
+
+`nudge_shown` and `nudge_clicked` (with `action: dismiss`) are emitted by the
+storefront. Dismissal rate is a Phase 7 guardrail: a nudge people close is
+costing goodwill whatever it does to conversion.
+
 ## Entries by phase
 
 | Metric | Phase |
@@ -166,7 +228,7 @@ against the population, so a label cannot drift away from the data.
 | Funnel step drop-off, revenue-weighted friction rank | 4 ✅ |
 | RFM segments and k-means cluster definitions | 4 ✅ |
 | Catalog field coverage (brand, GTIN, image, category) | 2 ✅ |
-| Abandonment-risk model: AUC, precision/recall, calibration | 5 |
+| Abandonment-risk model: AUC, precision/recall, calibration | 5 ✅ |
 | Assistant grounding accuracy, hallucination rate, fallback rate | 6 |
 | Experiment statistics: lift, CI, p-value, SRM check, guardrails | 7 |
 | Catalog readiness score (0–100) and its component weights | 8 |

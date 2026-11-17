@@ -51,7 +51,7 @@ test('health endpoint reports wiring', async ({ request }) => {
   expect(response.ok()).toBeTruthy();
   const body = await response.json();
   expect(body.llmProvider).toBe('mock');
-  expect(body.phase).toBe(2);
+  expect(body.phase).toBe(5);
 });
 
 test('event ingest validates and accepts a batch', async ({ request }) => {

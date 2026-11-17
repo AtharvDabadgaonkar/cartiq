@@ -12,7 +12,7 @@ proves their impact through a built-in A/B experiment studio.
 
 **Diagnose → Intervene → Measure → Scale**
 
-> ### 🚧 Build status: Phase 4 of 9 complete (diagnose)
+> ### 🚧 Build status: Phase 5 of 9 complete (abandonment)
 >
 > Every figure below is produced by `make metrics` into
 > [`reports/metrics.json`](reports/metrics.json) and carries its own provenance.
@@ -40,6 +40,36 @@ cart abandonment from it, and says why in the UI instead of rendering a 100%
 conversion rate that would look entirely plausible. Journey metrics come from
 simulated sessions and are labelled; value and segmentation metrics come from
 the real rows.
+
+## The abandonment model, reported honestly
+
+| | |
+| --- | --- |
+| Trained on | 47,458 carting sessions (simulated) |
+| Selected model | **logistic regression** |
+| ROC AUC | 0.611 |
+| Average precision | 0.853 vs 0.802 majority-class baseline |
+| Brier score | 0.1551 |
+
+Three things worth saying plainly:
+
+- **The gradient-boosted model did not beat the logistic baseline.** That is
+  reported, not buried. The simulator generates abandonment from additive
+  device, segment and channel effects, so there is little non-linear structure
+  to find — shipping the simpler model is the right call.
+- **AUC 0.61 is a weak ranker**, and it is quoted as such. What matters more
+  for this use is that the model is *calibrated*: the nudge engine fires on a
+  probability threshold, so a predicted 80% has to mean 80%. The worst
+  calibration gap on any well-populated bin is under 5 percentage points, and a
+  test enforces it.
+- **No post-cart feature is used.** `mart_cart_sessions` excludes every funnel
+  step after the cart is created, because a model that knows the shopper
+  reached the payment step would score beautifully and be undeployable.
+
+The nudge engine is **rules, not a model**: the model gives a calibrated score,
+the rules decide what to say. At most one message per cart — stacking them
+turns a helpful nudge into a dark pattern, and would make the experiment
+uninterpretable. Each nudge sits behind its own feature flag.
 
 ## The storefront
 
@@ -201,7 +231,7 @@ written up with their trade-offs in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 | 2 | Data — ingestion, seed sample, catalog, session simulator | ✅ |
 | 3 | Storefront — pages, checkout, event tracking, Playwright | ✅ |
 | 4 | Diagnose — SQL models, funnel, KPIs, segmentation, friction | ✅ |
-| 5 | Abandonment — risk model, metrics report, nudge engine | — |
+| 5 | Abandonment — risk model, metrics report, nudge engine | ✅ |
 | 6 | AI assistant — pgvector retrieval, chat, recommendations, eval | — |
 | 7 | Experiment Studio — assignment, stats, guardrails, AI readout | — |
 | 8 | Scale — insights copilot with SQL safety, catalog readiness | — |

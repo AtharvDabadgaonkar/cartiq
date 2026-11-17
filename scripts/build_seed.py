@@ -78,7 +78,7 @@ def main() -> int:
 
     print("simulating a small run ...")
     params = replace(DEFAULT_PARAMS, seed=args.sim_seed, sessions=args.sim_sessions)
-    simulated = simulate(params, catalog.rename(columns={"product_id": "product_id"}))
+    simulated = simulate(params, catalog, namespace="seed")
     print(f"  simulated events {len(simulated.events):,}")
 
     real_events.to_csv(SEED_DIR / "events_real.csv.gz", index=False, compression="gzip")

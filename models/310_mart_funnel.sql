@@ -3,9 +3,10 @@
 -- One row per session per step the session REACHED, so a count of sessions at
 -- a step is a plain COUNT and the console cannot accidentally invent its own
 -- definition of "reached".
-DROP VIEW IF EXISTS mart_funnel CASCADE;
+-- Materialised: eight rows per session, read on every funnel render.
+DROP MATERIALIZED VIEW IF EXISTS mart_funnel CASCADE;
 
-CREATE VIEW mart_funnel AS
+CREATE MATERIALIZED VIEW mart_funnel AS
 SELECT
     s.session_id,
     s.data_source,
@@ -33,6 +34,11 @@ CROSS JOIN LATERAL (
 ) AS step(step_key, step_index, step_label, reached)
 WHERE step.reached;
 
-COMMENT ON VIEW mart_funnel IS
+CREATE INDEX mart_funnel_slice_idx
+    ON mart_funnel (data_source, step_index, session_date);
+CREATE INDEX mart_funnel_dims_idx
+    ON mart_funnel (data_source, device, traffic_source, segment);
+
+COMMENT ON MATERIALIZED VIEW mart_funnel IS
   'One row per session per reached funnel step. Step order and labels match '
   'packages/shared/src/events.ts FUNNEL_STEPS.';

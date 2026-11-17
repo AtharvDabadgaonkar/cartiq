@@ -1,0 +1,75 @@
+{
+  "_comment": "Exported logistic abandonment model. Regenerate with `python scripts/train_abandonment.py`; do not hand-edit.",
+  "model": "logistic_regression",
+  "trained_on_rows": 47458,
+  "positive_rate": 0.801783,
+  "roc_auc": 0.610728,
+  "intercept": 1.1649491262780416,
+  "feature_names": [
+    "cat__device_mobile",
+    "cat__device_tablet",
+    "cat__traffic_source_email",
+    "cat__traffic_source_organic",
+    "cat__traffic_source_paid_search",
+    "cat__traffic_source_referral",
+    "cat__traffic_source_social",
+    "cat__segment_loyal",
+    "cat__segment_new_visitor",
+    "cat__segment_returning_browser",
+    "num__cart_value",
+    "num__cart_items",
+    "num__cart_lines",
+    "num__product_views",
+    "num__cart_adds",
+    "num__seconds_to_cart",
+    "num__hour_of_day",
+    "num__day_of_week",
+    "num__gap_to_free_shipping",
+    "num__is_new_user",
+    "num__used_search",
+    "num__pays_shipping"
+  ],
+  "coefficients": [
+    0.7036872087024681, 0.004892006268826897, -0.02012803682160379, 0.09970296495974898,
+    0.05300593144268706, 0.02408322119197456, 0.206562009719499, -0.7412332534981788,
+    0.2966998131146897, -0.4385930814852071, 0.06793181315923129, 0.00487755295349734,
+    0.00487755295349734, 0.0, 0.00487755295349734, -0.009766790199472705, 0.015828382941627764,
+    0.01476141315655199, 0.019033159281600348, -0.2503304984581794, 6.0996577624291466e-5,
+    0.019013249467646
+  ],
+  "categorical": {
+    "features": ["device", "traffic_source", "segment"],
+    "categories": {
+      "device": ["desktop", "mobile", "tablet"],
+      "traffic_source": ["direct", "email", "organic", "paid_search", "referral", "social"],
+      "segment": ["bargain_hunter", "loyal", "new_visitor", "returning_browser"]
+    },
+    "drop_first": true
+  },
+  "numeric": {
+    "features": [
+      "cart_value",
+      "cart_items",
+      "cart_lines",
+      "product_views",
+      "cart_adds",
+      "seconds_to_cart",
+      "hour_of_day",
+      "day_of_week",
+      "gap_to_free_shipping",
+      "is_new_user",
+      "used_search",
+      "pays_shipping"
+    ],
+    "mean": [
+      5.344160930520046, 2.6031804006405754, 2.6031804006405754, 1.0, 2.6031804006405754,
+      108.00797909701346, 14.29432753631332, 3.8374399460568087, 34.661009187199724,
+      0.36431320765319025, 0.3485235860983901, 0.9994942825836541
+    ],
+    "scale": [
+      4.410073585367211, 1.2632054130518056, 1.2632054130518056, 1.0, 1.2632054130518056,
+      44.04568806849227, 5.183635430028438, 1.9844549952240529, 4.355239909259848,
+      0.48123704593748157, 0.4765027765202509, 0.02248247464672684
+    ]
+  }
+}

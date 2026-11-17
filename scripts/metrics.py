@@ -362,6 +362,61 @@ def collect_diagnosis() -> dict[str, Any]:
     return collected
 
 
+def collect_abandonment_model() -> dict[str, Any]:
+    """Abandonment-model evaluation, read from the training report.
+
+    Read rather than retrained here: training is a separate, explicit step
+    (`make train`), so `make metrics` cannot silently publish a model nobody
+    asked for.
+    """
+    report = REPO_ROOT / "reports" / "abandonment_model.json"
+    if not report.exists():
+        return {}
+    payload = json.loads(report.read_text())
+    best = payload["metrics"][payload["best_model"]]
+    baseline = payload["metrics"]["majority_class_baseline"]
+
+    def entry(value: float, definition: str, unit: str | None = None) -> dict[str, Any]:
+        return metric(
+            round(float(value), 6),
+            provenance="model_eval",
+            definition=definition,
+            source="scripts/train_abandonment.py",
+            unit=unit,
+        )
+
+    return {
+        "abandonment_model_rows": entry(
+            payload["rows"],
+            "Carting sessions the model was trained and evaluated on.",
+            "rows",
+        ),
+        "abandonment_model_roc_auc": entry(
+            best["roc_auc"], "ROC AUC of the selected model on a held-out split."
+        ),
+        "abandonment_model_average_precision": entry(
+            best["average_precision"],
+            "Average precision of the selected model. The honest headline at an ~80% "
+            "positive rate, where always predicting 'abandoned' already scores 0.80.",
+        ),
+        "abandonment_model_baseline_average_precision": entry(
+            baseline["average_precision"],
+            "Average precision of always predicting the majority class.",
+        ),
+        "abandonment_model_brier_score": entry(
+            best["brier_score"],
+            "Brier score of the selected model; lower is better. Calibration matters "
+            "because the nudge engine fires on a probability threshold.",
+        ),
+        "abandonment_model_selected": metric(
+            payload["best_model"],
+            provenance="model_eval",
+            definition="Model chosen by average precision on the held-out split.",
+            source="scripts/train_abandonment.py",
+        ),
+    }
+
+
 def collect() -> dict[str, Any]:
     """Build the metrics payload.
 
@@ -373,11 +428,12 @@ def collect() -> dict[str, Any]:
     metrics.update(collect_from_database())
     metrics.update(collect_simulation_truth())
     metrics.update(collect_diagnosis())
+    metrics.update(collect_abandonment_model())
 
     return {
         "generated_at": datetime.now(UTC).isoformat(),
         "git_sha": git_sha(),
-        "phase": 4,
+        "phase": 5,
         "notes": (
             "Diagnosis metrics are computed from a real public e-commerce dataset "
             "(UCI Online Retail II, CC BY 4.0). Experiment results are computed from "

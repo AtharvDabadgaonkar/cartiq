@@ -24,7 +24,7 @@ def main() -> None:
     with st.sidebar:
         st.markdown("### 🔶 CartIQ")
         st.caption("Conversion Intelligence Console")
-        st.caption(f"v{__version__} · Phase 2 of 9")
+        st.caption(f"v{__version__} · Phase 5 of 9")
 
     # The default page is served at "/", and Streamlit 404s a url_path set on
     # it, so only the other sections get an explicit path.

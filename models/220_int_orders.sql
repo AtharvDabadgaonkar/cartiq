@@ -4,9 +4,11 @@
 -- invoice number for an import, the generated reference for the storefront and
 -- the simulator. Grouping on it means an order is an order regardless of how
 -- many events produced it.
-DROP VIEW IF EXISTS int_orders CASCADE;
+-- Materialised: this aggregates every purchase event, and the KPI tiles
+-- query it on each page load.
+DROP MATERIALIZED VIEW IF EXISTS int_orders CASCADE;
 
-CREATE VIEW int_orders AS
+CREATE MATERIALIZED VIEW int_orders AS
 SELECT
     e.properties ->> 'order_id'                       AS order_id,
     MIN(e.session_id)                                 AS session_id,
@@ -30,6 +32,9 @@ WHERE e.event_type = 'purchase'
   AND e.properties ->> 'order_id' IS NOT NULL
 GROUP BY e.properties ->> 'order_id', e.data_source;
 
-COMMENT ON VIEW int_orders IS
+CREATE INDEX int_orders_source_idx ON int_orders (data_source, ordered_on);
+CREATE INDEX int_orders_session_idx ON int_orders (session_id);
+
+COMMENT ON MATERIALIZED VIEW int_orders IS
   'Order grain across every source. Revenue is source-aware because a '
   'transactional import is line-grained and the storefront is order-grained.';

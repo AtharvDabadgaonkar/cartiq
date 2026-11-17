@@ -8,9 +8,14 @@
 -- Dropped first: CREATE OR REPLACE cannot insert a column mid-list, which
 -- makes every column addition a schema fight. Models are applied in
 -- dependency order, so CASCADE only drops views this runner rebuilds.
-DROP VIEW IF EXISTS int_sessions CASCADE;
+-- MATERIALISED on purpose. Every diagnosis query starts from session grain,
+-- and recomputing it from 1.6M events per request took ~7s for the funnel
+-- alone. Materialising plus indexing brings the whole dashboard inside its
+-- 2-second budget. `scripts/build_models.py` rebuilds it, so it is refreshed
+-- by `make migrate` after any load.
+DROP MATERIALIZED VIEW IF EXISTS int_sessions CASCADE;
 
-CREATE VIEW int_sessions AS
+CREATE MATERIALIZED VIEW int_sessions AS
 WITH flags AS (
     SELECT
         e.session_id,
@@ -99,7 +104,16 @@ SELECT
     (reached_add_to_cart AND NOT reached_purchase)             AS abandoned_cart
 FROM flags;
 
-COMMENT ON VIEW int_sessions IS
+CREATE INDEX int_sessions_source_date_idx
+    ON int_sessions (data_source, session_date);
+CREATE INDEX int_sessions_source_device_idx
+    ON int_sessions (data_source, device);
+CREATE INDEX int_sessions_session_idx
+    ON int_sessions (session_id);
+CREATE INDEX int_sessions_cart_idx
+    ON int_sessions (data_source) WHERE reached_add_to_cart;
+
+COMMENT ON MATERIALIZED VIEW int_sessions IS
   'Session grain. Always filter on data_source: a transactional source records '
   'only purchases, so its sessions are 100% converted by construction and must '
   'never be mixed into a funnel or conversion rate.';

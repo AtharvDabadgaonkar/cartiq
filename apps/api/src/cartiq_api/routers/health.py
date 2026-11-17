@@ -30,5 +30,5 @@ def health() -> HealthResponse:
         version=__version__,
         database="up" if database_up else "down",
         llm_provider=settings.llm_provider,
-        phase=2,
+        phase=5,
     )

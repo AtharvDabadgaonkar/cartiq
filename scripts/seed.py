@@ -31,6 +31,7 @@ from cartiq_api.loaders import (  # noqa: E402
     load_products,
     load_returns,
     psycopg_connection,
+    refresh_materialised_views,
     table_counts,
 )
 
@@ -129,6 +130,23 @@ def main() -> int:
                     manifest["real"]["observable_funnel_steps"],
                 ),
             )
+            # Feature flags for the nudges. On by default at full rollout so a
+            # clean checkout actually shows the intervention; Phase 7 attaches
+            # them to the flagship experiment and ramps them.
+            for flag_key, description in (
+                ("nudge_free_shipping", "Show how far a cart is from free delivery."),
+                ("nudge_saved_cart", "Reassure a high-risk cart that it is saved."),
+                ("nudge_low_stock", "Mild urgency when nothing more useful applies."),
+            ):
+                cursor.execute(
+                    """
+                    INSERT INTO feature_flags (id, key, description, enabled, rollout, updated_at)
+                    VALUES (gen_random_uuid(), %s, %s, true, 1.0, now())
+                    ON CONFLICT (key) DO NOTHING
+                    """,
+                    (flag_key, description),
+                )
+
             cursor.execute(
                 """
                 INSERT INTO simulation_runs (id, label, seed, params, sessions)
@@ -158,6 +176,10 @@ def main() -> int:
             "  return lines       "
             f"{load_returns(connection, returns, dataset_import_id=import_id, key_prefix='seed'):>8,}"
         )
+
+    refreshed = refresh_materialised_views()
+    if refreshed:
+        print(f"\nrefreshed {len(refreshed)} materialised view(s)")
 
     print("\ntable counts:")
     for table, count in table_counts().items():

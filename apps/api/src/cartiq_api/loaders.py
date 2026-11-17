@@ -292,3 +292,30 @@ def table_counts() -> dict[str, int]:
     with get_engine().connect() as connection:
         row = connection.execute(statement).mappings().one()
     return {key: int(value) for key, value in row.items()}
+
+
+#: Materialised views, in dependency order. Refreshing a stale one is cheaper
+#: than rebuilding every model, and a load that skips it would leave the console
+#: showing the previous dataset.
+MATERIALISED_VIEWS: tuple[str, ...] = ("int_sessions", "int_orders", "mart_funnel")
+
+
+def refresh_materialised_views() -> list[str]:
+    """Refresh the materialised views after a data load.
+
+    Returns the names refreshed. Views that do not exist yet are skipped, so a
+    load against an unmigrated database still succeeds.
+    """
+    refreshed: list[str] = []
+    with get_engine().begin() as connection:
+        for view in MATERIALISED_VIEWS:
+            exists = connection.execute(
+                text("SELECT to_regclass(:name) IS NOT NULL"), {"name": view}
+            ).scalar()
+            if not exists:
+                continue
+            connection.execute(text(f"REFRESH MATERIALIZED VIEW {view}"))
+            refreshed.append(view)
+        if refreshed:
+            connection.execute(text("ANALYZE"))
+    return refreshed

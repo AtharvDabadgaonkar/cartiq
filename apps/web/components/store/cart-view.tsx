@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/components/providers/cart-provider';
 import { useTracker } from '@/components/providers/tracking-provider';
+import { CartNudge } from '@/components/store/cart-nudge';
 import { OrderSummary } from '@/components/store/order-summary';
 import { Price } from '@/components/store/price';
 import { ProductImage } from '@/components/store/product-image';
@@ -103,6 +104,7 @@ export function CartView() {
         </ul>
 
         <div className="space-y-4">
+          <CartNudge cartValue={subtotal} items={itemCount} lines={lines.length} />
           <OrderSummary subtotal={subtotal} itemCount={itemCount} />
           <Button
             size="lg"

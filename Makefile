@@ -7,7 +7,7 @@ PYTHON_BASE ?= $(shell command -v python3.11 || command -v python3)
 .DEFAULT_GOAL := help
 .PHONY: help env install db-up db-down db-reset migrate generate dev dev-web dev-api \
         dev-console ingest seed build-seed simulate simulate-aa metrics test test-web \
-        test-api test-e2e lint typecheck format ci clean data
+        test-api test-e2e lint typecheck format ci clean data train
 
 help: ## Show available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -75,6 +75,9 @@ simulate: ## Generate reproducible simulated sessions (see docs/SIMULATION.md)
 
 simulate-aa: ## A/A run: every treatment effect set to 1.0, for the false-positive check
 	$(PY) scripts/simulate.py --aa-test --label aa
+
+train: ## Train the abandonment-risk model and export it for the storefront
+	$(PY) scripts/train_abandonment.py
 
 metrics: ## Recompute every number quoted in the README -> reports/metrics.json
 	$(PY) scripts/metrics.py

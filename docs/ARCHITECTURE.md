@@ -211,6 +211,23 @@ so a component tracking on mount was stamped with the page it had just left
 `window.location.pathname` at call time, so an event always carries the page it
 actually happened on.
 
+### 2.11 Session grain is materialised
+
+Every diagnosis query starts from session grain. Recomputing it from 1.6M
+events per request took ~7s for the funnel alone and ~21s for a full dashboard
+render — well past the 2-second budget. `int_sessions`, `int_orders` and
+`mart_funnel` are therefore materialised views with indexes, rebuilt by
+`scripts/build_models.py` and refreshed by the loaders after any ingest or
+simulation run.
+
+The funnel also counts with `COUNT(*)` rather than `COUNT(DISTINCT session_id)`:
+`mart_funnel` emits exactly one row per session per reached step, so they are
+equivalent, and the distinct sort was costing seconds. The reconciliation tests
+check the result against `COUNT(DISTINCT ...)` straight off `events`, so the
+optimisation cannot quietly change an answer.
+
+Together: 21s to 0.66s.
+
 ## 3. Repository layout
 
 | Path | Contents |

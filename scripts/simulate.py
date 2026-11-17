@@ -36,6 +36,7 @@ from cartiq_api.loaders import (  # noqa: E402
     deterministic_id,
     load_events,
     psycopg_connection,
+    refresh_materialised_views,
     table_counts,
 )
 from cartiq_api.simulation import DEFAULT_PARAMS, simulate  # noqa: E402
@@ -122,7 +123,8 @@ def main() -> int:
     print(f"label     {args.label}{' (A/A)' if args.aa_test else ''}")
     print(f"catalog   {0 if catalog is None else len(catalog):,} real products")
     print("\nsimulating ...")
-    output = simulate(params, catalog)
+    # Namespace keeps two loaded runs from sharing session ids.
+    output = simulate(params, catalog, namespace=f"{args.label}{params.seed}")
 
     sessions = output.sessions
     print(f"events          {len(output.events):,}")
@@ -184,6 +186,10 @@ def main() -> int:
             simulation_run_id=run_id,
         )
         print(f"  events  {loaded:>10,} inserted")
+
+    refreshed = refresh_materialised_views()
+    if refreshed:
+        print(f"\nrefreshed {len(refreshed)} materialised view(s)")
 
     print("\ntable counts:")
     for table, count in table_counts().items():

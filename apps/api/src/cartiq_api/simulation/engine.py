@@ -147,6 +147,7 @@ def _assign_experiments(
 def simulate(
     params: SimulationParams,
     catalog: pd.DataFrame | None = None,
+    namespace: str | None = None,
 ) -> SimulationOutput:
     """Generate sessions and the events they produce.
 
@@ -155,6 +156,9 @@ def simulate(
         catalog: Optional real catalog (`product_id`, `price`, `units_sold`) so
             simulated carts contain real products at real prices. Without it,
             synthetic products are used and prices are drawn log-normally.
+        namespace: Prefix for generated session and user ids. Two runs loaded
+            into the same database MUST use different namespaces, or their
+            sessions collide and merge into impossible ones.
 
     Returns:
         Events, per-session rows, the parameters, and the ground-truth effects
@@ -171,7 +175,8 @@ def simulate(
 
     # Returning visitors reuse user ids, so RFM and CLV have repeat behaviour.
     user_numbers = rng.integers(0, params.users, size=n)
-    user_ids = np.array([f"sim_user_{u}" for u in user_numbers])
+    prefix = f"{namespace}_" if namespace else ""
+    user_ids = np.array([f"sim_{prefix}user_{u}" for u in user_numbers])
 
     if catalog is not None and not catalog.empty:
         product_ids = catalog["product_id"].to_numpy()
@@ -206,7 +211,7 @@ def simulate(
         user_id = str(user_ids[i])
         assignments, active = _assign_experiments(params, user_id)
         device, segment, source = str(devices[i]), str(segments[i]), str(traffic[i])
-        session_id = f"sim_sess_{i}"
+        session_id = f"sim_{prefix}sess_{i}"
         clock = pd.Timestamp(started_at[i], tz="UTC")
 
         # Basket is drawn up front so its economics can affect checkout.

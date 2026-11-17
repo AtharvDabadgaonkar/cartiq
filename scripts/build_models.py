@@ -29,6 +29,11 @@ def main() -> int:
     parser.add_argument(
         "--dry-run", action="store_true", help="list models without applying them"
     )
+    parser.add_argument(
+        "--no-analyze",
+        action="store_true",
+        help="skip ANALYZE; a freshly built materialised view has no statistics",
+    )
     args = parser.parse_args()
 
     files = model_files()
@@ -50,6 +55,10 @@ def main() -> int:
         for path in files:
             connection.execute(text(path.read_text()))
             print(f"applied {path.name}")
+        if not args.no_analyze:
+            # A freshly built materialised view has no statistics, and the
+            # planner will happily choose a sequential scan without them.
+            connection.execute(text("ANALYZE"))
     print(f"{len(files)} model(s) applied")
     return 0
 

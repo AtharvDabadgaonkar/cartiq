@@ -11,7 +11,7 @@ def test_health_reports_version_and_provider(client):
     assert body["status"] in {"ok", "degraded"}
     assert body["database"] in {"up", "down"}
     assert body["llm_provider"] == "mock"
-    assert body["phase"] == 2
+    assert body["phase"] == 5
 
 
 def test_schema_endpoint_serves_the_event_contract(client):

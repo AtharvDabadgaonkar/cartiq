@@ -23,6 +23,6 @@ export async function GET() {
     eventCount,
     llmProvider: env.LLM_PROVIDER,
     embeddingProvider: env.EMBEDDING_PROVIDER,
-    phase: 2,
+    phase: 5,
   });
 }
