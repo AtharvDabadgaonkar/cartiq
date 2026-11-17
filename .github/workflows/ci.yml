@@ -86,7 +86,18 @@ jobs:
       - run: ruff format --check apps/api apps/console scripts streamlit_app.py
       - run: mypy apps/api/src apps/console/cartiq_console
       # Covers the stats engine and the models; gate is set in pyproject.toml.
-      - run: pytest apps/api
+      # Failures are echoed as ::error:: annotations so they show up inline on
+      # the commit and in the API, rather than only inside the job log — which
+      # needs admin rights to read.
+      - name: pytest
+        run: |
+          set -o pipefail
+          if ! pytest apps/api -q --tb=short 2>&1 | tee /tmp/pytest.log; then
+            tail -60 /tmp/pytest.log | while IFS= read -r line; do
+              printf '::error::%s\n' "$line"
+            done
+            exit 1
+          fi
       - run: python scripts/build_models.py --dry-run
       # The Streamlit entrypoint must at least import cleanly: a broken console
       # would otherwise only be discovered on deploy.
