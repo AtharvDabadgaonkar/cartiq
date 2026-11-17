@@ -130,3 +130,39 @@ export async function addFirstProductToCart(page: Page): Promise<void> {
     }
   });
 }
+
+/**
+ * Puts a cart of a known value in place, then opens the cart page.
+ *
+ * Clicking "add to cart" and raising the quantity makes the test depend on
+ * whichever product sorts first, and that ordering is popularity-based — so it
+ * differs between a seeded CI database and a developer's larger one. A £0.65
+ * product never reaches the nudge thresholds however many times you click.
+ * Writing the cart directly uses the app's own persistence format and makes
+ * the subtotal, and therefore the nudge decision, deterministic.
+ */
+export async function seedCart(
+  page: Page,
+  line: { price: number; quantity: number },
+): Promise<void> {
+  // Visit a real product first so the id exists in the catalog and the cart
+  // row renders with a title.
+  await page.goto('/search?q=christmas');
+  const href = await page
+    .getByRole('heading', { level: 3 })
+    .first()
+    .locator('xpath=ancestor::a[1]')
+    .getAttribute('href');
+  const productId = decodeURIComponent((href ?? '').split('/product/')[1] ?? 'unknown');
+
+  await page.evaluate(
+    ({ productId, price, quantity }) => {
+      window.localStorage.setItem(
+        'cartiq.cart',
+        JSON.stringify([{ productId, title: 'Test Item', price, quantity }]),
+      );
+    },
+    { productId, ...line },
+  );
+  await page.goto('/cart');
+}

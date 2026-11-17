@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { EventRecorder, addFirstProductToCart, fillShipping } from './helpers';
+import { EventRecorder, addFirstProductToCart, fillShipping, seedCart } from './helpers';
 
 test.describe('storefront', () => {
   test('home page shows the catalog and states it is a demo', async ({ page }) => {
@@ -298,14 +298,9 @@ test.describe('cart recovery nudge', () => {
   test('a risky cart gets exactly one nudge, and it is measured', async ({ page }) => {
     const recorder = await EventRecorder.attach(page);
 
-    await page.goto('/search?q=christmas');
-    await addFirstProductToCart(page);
-    await page.goto('/cart');
-
-    // A single cheap item is deliberately below the risk threshold, and the
-    // engine says nothing. Build a cart that genuinely qualifies instead of
-    // asserting a nudge the rules would never fire.
-    await raiseCartUntilNudged(page);
+    // £32 with 2 items: comfortably past the 75% risk threshold and £8 short
+    // of free delivery, so exactly one rule can match.
+    await seedCart(page, { price: 16, quantity: 2 });
 
     const nudge = page.getByTestId('cart-nudge');
     await expect(nudge).toBeVisible({ timeout: 15000 });
@@ -323,10 +318,7 @@ test.describe('cart recovery nudge', () => {
   test('dismissing a nudge is recorded as a guardrail signal', async ({ page }) => {
     const recorder = await EventRecorder.attach(page);
 
-    await page.goto('/search?q=christmas');
-    await addFirstProductToCart(page);
-    await page.goto('/cart');
-    await raiseCartUntilNudged(page);
+    await seedCart(page, { price: 16, quantity: 2 });
 
     await expect(page.getByTestId('cart-nudge')).toBeVisible({ timeout: 15000 });
     await page.getByRole('button', { name: /^Dismiss/ }).click();
@@ -341,25 +333,3 @@ test.describe('cart recovery nudge', () => {
     expect(bad.status()).toBe(400);
   });
 });
-
-/**
- * Raises the cart quantity until the engine decides it is worth a nudge.
- *
- * The rules are intentionally conservative: one cheap item scores below the
- * 75% risk threshold and gets left alone. Rather than assert a message the
- * rules would never produce, this builds a cart that qualifies.
- */
-async function raiseCartUntilNudged(page: import('@playwright/test').Page): Promise<void> {
-  const increase = page.getByRole('button', { name: /^Increase quantity/ });
-  for (let attempt = 0; attempt < 6; attempt++) {
-    if (
-      await page
-        .getByTestId('cart-nudge')
-        .isVisible()
-        .catch(() => false)
-    )
-      return;
-    await increase.click();
-    await page.waitForTimeout(600);
-  }
-}

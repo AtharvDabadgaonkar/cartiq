@@ -57,7 +57,14 @@ export function CartNudge({
       }
     })();
 
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      // Release the dedupe key for the request we just cancelled. React
+      // StrictMode mounts, unmounts and remounts effects in development, so
+      // without this the first fetch is aborted, the ref still holds the key,
+      // and the remount returns early — the nudge then never loads at all.
+      if (requested.current === key) requested.current = '';
+    };
   }, [cartValue, items, lines]);
 
   useEffect(() => {
