@@ -20,6 +20,10 @@ Conventions:
 | `3xx_mart_` | marts the console and the API read |
 | `9xx_` | allow-listed read-only views exposed to the Module 6 copilot |
 
-Every view is `CREATE OR REPLACE`, so re-running is safe. Views are the only
+Every model begins with `DROP VIEW IF EXISTS <name> CASCADE`, then `CREATE
+VIEW`. `CREATE OR REPLACE` refuses to insert a column anywhere but the end,
+which turns every column addition into a schema fight; models are applied in
+dependency order, so the CASCADE only drops views this runner immediately
+rebuilds. Re-running is still safe and idempotent. Views are the only
 thing in here: anything that needs materialising gets a Prisma migration
 instead, so the schema stays in one place.

@@ -159,6 +159,11 @@ class SimulationParams:
     )
 
     # --- Economics ----------------------------------------------------------
+    #: Share of browsing sessions that use the search box rather than only
+    #: navigating. Without this the simulator emits no `search` events at all
+    #: and the search-to-purchase KPI cannot be computed.
+    search_share: float = 0.35
+
     #: Items per cart ~ 1 + Poisson(lambda).
     cart_items_lambda: float = 1.6
     #: Orders above this get free shipping.

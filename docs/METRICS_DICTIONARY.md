@@ -74,13 +74,97 @@ that would need an unobservable field is not reported for that source.
 | `simulated_sessions` | Sessions generated | session | simulated |
 | `simulated_configured_relative_lift` | The lift the simulator was *configured* to produce. The Experiment Studio never reads it | — | simulated |
 
+## Phase 4 entries — funnel, KPIs, segments
+
+All funnel and session-denominated figures are **simulated**; value and
+segmentation figures are **real**. The split is not a preference, it is forced:
+see "Why the funnel is simulated" above.
+
+### Funnel
+
+| Metric | Definition | Grain | Provenance |
+| --- | --- | --- | --- |
+| Step sessions | Distinct sessions that emitted any event for a step | session | simulated |
+| `step_rate` | Sessions at a step ÷ sessions at the previous step | step | simulated |
+| `overall_rate` | Sessions at a step ÷ sessions at step 0 | step | simulated |
+| `drop_rate` | Sessions lost entering a step ÷ sessions at the previous step | step | simulated |
+
+A step is "reached" if the session emitted *any* event for it; `max_step_depth`
+is derived from the deepest step actually reached, so an out-of-order log
+cannot inflate the funnel.
+
+### KPI tiles
+
+| Metric | Formula | Needs sessions? |
+| --- | --- | --- |
+| Conversion rate | converting sessions ÷ all sessions | **yes** |
+| Average order value | revenue ÷ orders | no |
+| Revenue per visitor | revenue ÷ all sessions | **yes** |
+| Cart abandonment rate | sessions that carted but never bought ÷ sessions that carted | **yes** |
+| Search-to-purchase rate | sessions that searched *and* bought ÷ sessions that searched | **yes** |
+| Customer lifetime value | mean observed revenue per attributed customer | no |
+
+**"Needs sessions" is load-bearing.** A transactional import contains only
+completed orders, so every session in it converted by construction. CartIQ
+refuses to compute those metrics there and says why, rather than rendering a
+100% conversion rate that would look entirely plausible.
+
+### Revenue rule
+
+Revenue is **source-aware**, because the sources are different grains:
+
+| Source | Shape | Revenue |
+| --- | --- | --- |
+| `REAL_DATASET` | one purchase event per invoice line, unit price | `SUM(price × quantity)` |
+| `SIMULATED`, `LIVE_DEMO` | one purchase event per order, order total | `SUM(price)` |
+
+Applying one rule to both would multiply simulated revenue by the basket size.
+
+### Friction ranking
+
+`revenue_at_risk = dropped × P(convert | reached step) × revenue per conversion`
+
+An **upper bound on recoverable revenue, not a forecast**: it assumes a
+recovered session behaves like one that already got through. Ranked descending;
+`share_of_loss` sums to 1.
+
+### RFM segments
+
+Recency, frequency and monetary value, each scored into quintiles *within a
+source*, then combined by a readable rule ladder (not a 125-cell lookup).
+Recency is measured against **the last date in the data**, not the wall clock —
+the dataset ends in 2011, so a wall-clock recency would mark every customer
+lapsed.
+
+| Segment | Means | Why it matters |
+| --- | --- | --- |
+| Champions | Recent, frequent, highest spend | Most exposed to a pricing or delivery change |
+| Loyal | Regular, above-average spend | Basket growth, not acquisition |
+| Potential loyalist | Recent, a few orders | Where loyalty is actually won |
+| New customers | Very recent, one order | Second experience decides retention |
+| At risk | Were frequent and valuable, now quiet | Highest recoverable revenue |
+| Can't lose them | Biggest spenders, gone quiet | Human outreach, not a discount |
+| Hibernating | Low value, long gone | Cheap reactivation only |
+| Lost | Lowest on all three | Suppress from paid targeting |
+
+Only **attributed** customers are scored. The import keeps unattributed lines
+so revenue reconciles, but they cannot be assigned to a person, so they are
+excluded here rather than silently bucketed.
+
+### Behavioural clusters
+
+K-means (k configurable, default 4) over recency, frequency, monetary, average
+order value and tenure, **standardised first** — without that, spend alone would
+decide the clusters. Descriptions are derived from where each cluster sits
+against the population, so a label cannot drift away from the data.
+
 ## Entries by phase
 
 | Metric | Phase |
 | --- | --- |
-| Conversion rate, AOV, revenue per visitor, cart abandonment rate, search-to-purchase rate, CLV | 4 |
-| Funnel step drop-off, revenue-weighted friction rank | 4 |
-| RFM segments and k-means cluster definitions | 4 |
+| Conversion rate, AOV, revenue per visitor, cart abandonment rate, search-to-purchase rate, CLV | 4 ✅ |
+| Funnel step drop-off, revenue-weighted friction rank | 4 ✅ |
+| RFM segments and k-means cluster definitions | 4 ✅ |
 | Catalog field coverage (brand, GTIN, image, category) | 2 ✅ |
 | Abandonment-risk model: AUC, precision/recall, calibration | 5 |
 | Assistant grounding accuracy, hallucination rate, fallback rate | 6 |

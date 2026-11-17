@@ -252,6 +252,116 @@ def collect_simulation_truth() -> dict[str, Any]:
     }
 
 
+def collect_diagnosis() -> dict[str, Any]:
+    """Funnel, KPI and segmentation figures from the analytics layer.
+
+    Computed through the same code the console uses, so a number quoted in the
+    README cannot drift from the one on the chart.
+    """
+    import sys
+
+    sys.path.insert(0, str(REPO_ROOT / "apps" / "api" / "src"))
+    try:
+        from cartiq_api.analytics import (
+            Filters,
+            friction_ranking,
+            funnel,
+            kpis,
+            segment_kpis,
+        )
+        from cartiq_api.db import ping
+    except ImportError:
+        return {}
+    if not ping():
+        return {}
+
+    collected: dict[str, Any] = {}
+    simulated = Filters(data_source="SIMULATED")
+
+    try:
+        measures = kpis(simulated)
+    except Exception:  # noqa: BLE001 - models may not be built yet
+        return {}
+
+    for key in (
+        "conversion_rate",
+        "aov",
+        "revenue_per_visitor",
+        "cart_abandonment_rate",
+        "search_to_purchase_rate",
+    ):
+        entry = measures.get(key, {})
+        if not entry.get("available"):
+            continue
+        collected[f"funnel_{key}"] = metric(
+            round(float(entry["value"]), 6),
+            provenance="simulated",
+            definition=entry["definition"],
+            source="cartiq_api.analytics.kpis",
+            unit=entry["unit"],
+        )
+
+    steps = funnel(simulated)
+    if not steps.empty:
+        worst = steps.iloc[steps["drop_rate"].idxmax()]
+        collected["funnel_worst_step"] = metric(
+            str(worst["step_label"]),
+            provenance="simulated",
+            definition="Funnel step losing the largest share of the sessions that reached it.",
+            source="cartiq_api.analytics.funnel",
+        )
+        collected["funnel_worst_step_drop_rate"] = metric(
+            round(float(worst["drop_rate"]), 6),
+            provenance="simulated",
+            definition="Share of sessions lost at the worst funnel step.",
+            source="cartiq_api.analytics.funnel",
+            unit="share",
+        )
+
+    ranking = friction_ranking(simulated)
+    if not ranking.empty:
+        top = ranking.iloc[0]
+        collected["friction_top_step"] = metric(
+            f"{top['from_label']} -> {top['step_label']}",
+            provenance="simulated",
+            definition="Transition carrying the most estimated revenue loss.",
+            source="cartiq_api.analytics.friction",
+        )
+        collected["friction_top_share_of_loss"] = metric(
+            round(float(top["share_of_loss"]), 6),
+            provenance="simulated",
+            definition="Share of all modelled revenue loss attributable to the worst step.",
+            source="cartiq_api.analytics.friction",
+            unit="share",
+        )
+
+    segments = segment_kpis("REAL_DATASET")
+    if not segments.empty:
+        best = segments.iloc[0]
+        collected["segment_top_by_revenue"] = metric(
+            str(best["segment_label"]),
+            provenance="real_dataset",
+            definition="RFM segment holding the largest share of revenue.",
+            source="cartiq_api.analytics.segmentation",
+        )
+        collected["segment_top_revenue_share"] = metric(
+            round(float(best["revenue_share"]), 6),
+            provenance="real_dataset",
+            definition="Share of revenue held by the largest RFM segment.",
+            source="cartiq_api.analytics.segmentation",
+            unit="share",
+        )
+        collected["segment_top_customer_share"] = metric(
+            round(float(best["customer_share"]), 6),
+            provenance="real_dataset",
+            definition="Share of customers in the largest-revenue RFM segment.",
+            source="cartiq_api.analytics.segmentation",
+            unit="share",
+        )
+
+    return collected
+
+
 def collect() -> dict[str, Any]:
     """Build the metrics payload.
 
@@ -262,11 +372,12 @@ def collect() -> dict[str, Any]:
     metrics: dict[str, Any] = {}
     metrics.update(collect_from_database())
     metrics.update(collect_simulation_truth())
+    metrics.update(collect_diagnosis())
 
     return {
         "generated_at": datetime.now(UTC).isoformat(),
         "git_sha": git_sha(),
-        "phase": 2,
+        "phase": 4,
         "notes": (
             "Diagnosis metrics are computed from a real public e-commerce dataset "
             "(UCI Online Retail II, CC BY 4.0). Experiment results are computed from "

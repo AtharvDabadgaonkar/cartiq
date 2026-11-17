@@ -350,6 +350,25 @@ def simulate(
                     )
                 )
 
+            # Some browsing sessions use search rather than only navigating.
+            # Emitted in addition to the page_view, because a shopper who
+            # searches has also viewed the results page.
+            if destination == "browse" and rng.random() < params.search_share:
+                event_rows.append(
+                    _event(
+                        session_id,
+                        user_id,
+                        "search",
+                        clock,
+                        device,
+                        source,
+                        segment,
+                        assignments,
+                        page=STEP_PAGES["browse"],
+                        properties={"source": "simulated"},
+                    )
+                )
+
             # The assistant is opened early, when the shopper starts looking.
             if (
                 destination == "browse"

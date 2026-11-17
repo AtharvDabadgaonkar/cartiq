@@ -18,17 +18,17 @@
     "generated_by": "scripts/simulate.py (cartiq_api.simulation)",
     "seed": 42,
     "sessions": 12000,
-    "events": 32793,
+    "events": 36530,
     "documented_in": "docs/SIMULATION.md",
     "truth": {
-      "expected_control_conversion": 0.01692332,
-      "expected_treatment_conversion": 0.01826333,
-      "expected_absolute_lift": 0.00134001,
+      "expected_control_conversion": 0.01692193,
+      "expected_treatment_conversion": 0.01826183,
+      "expected_absolute_lift": 0.0013399,
       "expected_relative_lift": 0.07918099,
-      "realised_control_conversion": 0.016421,
-      "realised_treatment_conversion": 0.01691,
-      "realised_absolute_lift": 0.000489,
-      "realised_relative_lift": 0.029773
+      "realised_control_conversion": 0.017091,
+      "realised_treatment_conversion": 0.018899,
+      "realised_absolute_lift": 0.001808,
+      "realised_relative_lift": 0.105789
     },
     "warning": "SIMULATED sessions. Not a real-world result."
   }

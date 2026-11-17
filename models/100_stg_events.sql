@@ -1,6 +1,11 @@
 -- Staging layer for the raw event log: one row per event, renamed to the
 -- names the rest of the models use, with the provenance label carried through.
-CREATE OR REPLACE VIEW stg_events AS
+-- Dropped first: CREATE OR REPLACE cannot insert a column mid-list, which
+-- makes every column addition a schema fight. Models are applied in
+-- dependency order, so CASCADE only drops views this runner rebuilds.
+DROP VIEW IF EXISTS stg_events CASCADE;
+
+CREATE VIEW stg_events AS
 SELECT
     event_id,
     event_type,

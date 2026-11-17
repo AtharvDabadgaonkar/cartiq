@@ -106,6 +106,7 @@ Multipliers applied to specific transitions, by device, segment and channel.
 
 | Parameter | Value | Why |
 | --- | --- | --- |
+| `search_share` | 0.35 | Share of browsing sessions that use the search box rather than only navigating. Without it the simulator emits no `search` events and the search-to-purchase KPI is not computable. A search is emitted *in addition to* the browse page view, because a shopper who searches has also seen a results page. |
 | `cart_items_lambda` | 1.6 | Items per cart ~ 1 + Poisson(1.6), giving a mean basket of ~2.6 items. |
 | `free_shipping_threshold` | £40.00 | The threshold the free-shipping nudge references. |
 | `shipping_cost` | £4.95 | Charged below the threshold. |

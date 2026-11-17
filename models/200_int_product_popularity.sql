@@ -1,7 +1,12 @@
 -- Purchase popularity per product, derived from the event log.
 -- The storefront uses it to order "best selling" and to pick related items;
 -- Phase 4's marts build on the same definition rather than restating it.
-CREATE OR REPLACE VIEW int_product_popularity AS
+-- Dropped first: CREATE OR REPLACE cannot insert a column mid-list, which
+-- makes every column addition a schema fight. Models are applied in
+-- dependency order, so CASCADE only drops views this runner rebuilds.
+DROP VIEW IF EXISTS int_product_popularity CASCADE;
+
+CREATE VIEW int_product_popularity AS
 SELECT
     p.id                                                       AS product_id,
     COALESCE(SUM(e.quantity) FILTER (WHERE e.event_type = 'purchase'), 0)::bigint

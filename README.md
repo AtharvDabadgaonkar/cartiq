@@ -12,11 +12,34 @@ proves their impact through a built-in A/B experiment studio.
 
 **Diagnose → Intervene → Measure → Scale**
 
-> ### 🚧 Build status: Phase 3 of 9 complete (storefront)
+> ### 🚧 Build status: Phase 4 of 9 complete (diagnose)
 >
 > Every figure below is produced by `make metrics` into
 > [`reports/metrics.json`](reports/metrics.json) and carries its own provenance.
 > None are hand-written. Screenshots and the live demo link land in Phase 9.
+
+## What the diagnosis found
+
+| Finding | Figure | Source |
+| --- | --- | --- |
+| Biggest leak | Product View -> Add to Cart — 78.9% of sessions lost there | simulated |
+| Share of all modelled revenue loss at that one step | 54% | simulated |
+| Cart abandonment | 80.6% | simulated |
+| Searchers convert better than average | 2.72% vs 1.80% overall | simulated |
+| Revenue concentration | **Champions** are 14% of customers but 53% of revenue | **real** |
+
+The last row is the one worth pausing on: it comes from real purchase
+behaviour, and it says a pricing or delivery change that annoys one customer in
+seven puts half the revenue at risk.
+
+**Why the funnel is simulated and the segments are real.** The real dataset
+records purchases, not browsing — it has no device, no traffic source and no
+session beyond the invoice, so every session in it converted by construction.
+CartIQ therefore *refuses* to compute conversion rate, revenue per visitor or
+cart abandonment from it, and says why in the UI instead of rendering a 100%
+conversion rate that would look entirely plausible. Journey metrics come from
+simulated sessions and are labelled; value and segmentation metrics come from
+the real rows.
 
 ## The storefront
 
@@ -177,7 +200,7 @@ written up with their trade-offs in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.m
 | 1 | Foundation — monorepo, schema, tracking SDK, console shell, CI, mock LLM | ✅ |
 | 2 | Data — ingestion, seed sample, catalog, session simulator | ✅ |
 | 3 | Storefront — pages, checkout, event tracking, Playwright | ✅ |
-| 4 | Diagnose — SQL models, funnel, KPIs, segmentation, friction | — |
+| 4 | Diagnose — SQL models, funnel, KPIs, segmentation, friction | ✅ |
 | 5 | Abandonment — risk model, metrics report, nudge engine | — |
 | 6 | AI assistant — pgvector retrieval, chat, recommendations, eval | — |
 | 7 | Experiment Studio — assignment, stats, guardrails, AI readout | — |
