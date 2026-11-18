@@ -2,8 +2,10 @@
 
 **AI Commerce Experience & Conversion Intelligence Platform**
 
-Live storefront   https://cartiq-sigma.vercel.app/
-Console           https://cartiq-crvu6q7r2qcdxmckzm7uae.streamlit.app/
+# Live storefront   https://cartiq-sigma.vercel.app/
+
+# Console           https://cartiq-crvu6q7r2qcdxmckzm7uae.streamlit.app/
+
 
 Commerce teams know their conversion rate. Few can say which specific moment of
 the journey is costing them the quarter, what to ship against it, or whether
