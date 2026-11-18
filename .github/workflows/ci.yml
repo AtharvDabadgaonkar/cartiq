@@ -110,7 +110,11 @@ jobs:
 
   e2e:
     name: e2e (Playwright storefront journeys)
-    runs-on: ubuntu-latest
+    # Pinned, not ubuntu-latest: that label is migrating to Ubuntu 26.04, which
+    # Playwright does not support -- "Playwright does not support chromium on
+    # ubuntu26.04-x64", so the browser install fails before any test runs. A
+    # browser matrix should not move under us on GitHub's schedule anyway.
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: pgvector/pgvector:pg16
