@@ -5,7 +5,7 @@
   "unit": "share",
   "lower_is_better": false,
   "available": true,
-  "value": 0.018083333333333333
+  "value": 0.018886363636363635
  },
  "aov": {
   "label": "Average order value",
@@ -13,7 +13,7 @@
   "unit": "currency",
   "lower_is_better": false,
   "available": true,
-  "value": 10.850986892829606
+  "value": 10.4297305991154
  },
  "revenue_per_visitor": {
   "label": "Revenue per visitor",
@@ -21,7 +21,7 @@
   "unit": "currency",
   "lower_is_better": false,
   "available": true,
-  "value": 0.19546847222222222
+  "value": 0.19650560606060608
  },
  "cart_abandonment_rate": {
   "label": "Cart abandonment rate",
@@ -29,7 +29,7 @@
   "unit": "share",
   "lower_is_better": true,
   "available": true,
-  "value": 0.8055265123226288
+  "value": 0.7955719557195572
  },
  "search_to_purchase_rate": {
   "label": "Search-to-purchase rate",
@@ -37,7 +37,7 @@
   "unit": "share",
   "lower_is_better": false,
   "available": true,
-  "value": 0.02354676295580532
+  "value": 0.024626306885936936
  },
  "orders": {
   "label": "Orders",
@@ -45,7 +45,7 @@
   "unit": "count",
   "lower_is_better": false,
   "available": true,
-  "value": 1297.0
+  "value": 2487.0
  },
  "revenue": {
   "label": "Revenue",
@@ -53,7 +53,7 @@
   "unit": "currency",
   "lower_is_better": false,
   "available": true,
-  "value": 14073.73
+  "value": 25938.74
  },
  "items_per_order": {
   "label": "Items per order",
@@ -61,7 +61,7 @@
   "unit": "count",
   "lower_is_better": false,
   "available": true,
-  "value": 2.5296838858905164
+  "value": 2.528347406513872
  },
  "clv_historical": {
   "label": "Customer lifetime value",
@@ -69,11 +69,11 @@
   "unit": "currency",
   "lower_is_better": false,
   "available": true,
-  "value": 10.91833204034135
+  "value": 10.52708603896104
  },
  "_context": {
-  "sessions": 72000,
-  "orders": 1297,
+  "sessions": 132000,
+  "orders": 2487,
   "slice": "Simulated",
   "sessions_meaningful": true
  }

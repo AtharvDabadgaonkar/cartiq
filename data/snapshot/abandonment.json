@@ -1,125 +1,97 @@
 {
- "rows": 6695,
- "positive_rate": 0.8055265123226288,
+ "rows": 12195,
+ "positive_rate": 0.7955719557195572,
  "best_model": "logistic_regression",
  "metrics": {
   "logistic_regression": {
-   "roc_auc": 0.5897330287087437,
-   "average_precision": 0.8405027606170129,
-   "precision": 0.8052568697729988,
+   "roc_auc": 0.637282171870017,
+   "average_precision": 0.8571801721456591,
+   "precision": 0.7956707117087569,
    "recall": 1.0,
-   "f1": 0.8921244209133025,
-   "brier_score": 0.15390744404058157
+   "f1": 0.8862100456621005,
+   "brier_score": 0.15582055765973737
   },
   "gradient_boosting": {
-   "roc_auc": 0.5794178150770967,
-   "average_precision": 0.8390980191351881,
-   "precision": 0.8084975369458128,
-   "recall": 0.9740356083086054,
-   "f1": 0.8835800807537012,
-   "brier_score": 0.16372659565641248
+   "roc_auc": 0.5786463922805244,
+   "average_precision": 0.8252859199069327,
+   "precision": 0.7998638529611981,
+   "recall": 0.9686727122835944,
+   "f1": 0.8762117822520508,
+   "brier_score": 0.16722447125463838
   },
   "majority_class_baseline": {
    "roc_auc": 0.5,
-   "average_precision": 0.8052568697729988,
-   "precision": 0.8052568697729988,
+   "average_precision": 0.7956707117087569,
+   "precision": 0.7956707117087569,
    "recall": 1.0,
-   "f1": 0.8921244209133024,
-   "brier_score": 0.15681824345639045
+   "f1": 0.8862100456621004,
+   "brier_score": 0.1625788302376371
   }
  },
  "calibration": [
   {
+   "bin_lower": 0.5,
+   "bin_upper": 0.6000000000000001,
+   "predicted": 0.593187747014236,
+   "observed": 0.42857142857142855,
+   "count": 7
+  },
+  {
    "bin_lower": 0.6000000000000001,
    "bin_upper": 0.7000000000000001,
-   "predicted": 0.6679053923951598,
-   "observed": 0.6666666666666666,
-   "count": 117
+   "predicted": 0.6631662277389655,
+   "observed": 0.6256544502617801,
+   "count": 382
   },
   {
    "bin_lower": 0.7000000000000001,
    "bin_upper": 0.8,
-   "predicted": 0.7589861508262346,
-   "observed": 0.7698815566835872,
-   "count": 591
+   "predicted": 0.7447498986714618,
+   "observed": 0.7556756756756757,
+   "count": 925
   },
   {
    "bin_lower": 0.8,
    "bin_upper": 0.9,
-   "predicted": 0.8490571110312012,
-   "observed": 0.8445154419595314,
-   "count": 939
+   "predicted": 0.8504218240076541,
+   "observed": 0.8542154566744731,
+   "count": 1708
   },
   {
    "bin_lower": 0.9,
    "bin_upper": 1.0,
-   "predicted": 0.907716958369742,
-   "observed": 0.8148148148148148,
+   "predicted": 0.9046360305948612,
+   "observed": 0.9629629629629629,
    "count": 27
   }
  ],
  "feature_importance": [
   {
-   "feature": "gap_to_free_shipping",
-   "importance": 0.018764687242033774,
-   "importance_std": 0.008342254529142772,
-   "log_odds": -0.08901882710486483,
-   "pushes": "toward buying"
-  },
-  {
    "feature": "device",
-   "importance": 0.00912060994454531,
-   "importance_std": 0.004134804590894894,
-   "log_odds": 0.584032767129034,
+   "importance": 0.030704692403877253,
+   "importance_std": 0.002883074301533911,
+   "log_odds": 0.9728636251795313,
    "pushes": "toward abandoning"
   },
   {
-   "feature": "seconds_to_cart",
-   "importance": 0.007300701463884729,
-   "importance_std": 0.003622337474502439,
-   "log_odds": 0.03021305299105108,
-   "pushes": "toward abandoning"
-  },
-  {
-   "feature": "cart_value",
-   "importance": 0.00660445241020835,
-   "importance_std": 0.0052890982812592345,
-   "log_odds": -0.10364174939576681,
+   "feature": "hour_of_day",
+   "importance": 0.003575126101519821,
+   "importance_std": 0.0028243413492856266,
+   "log_odds": -0.019925870148673,
    "pushes": "toward buying"
   },
   {
-   "feature": "segment",
-   "importance": 0.004898286195004165,
-   "importance_std": 0.001847207661486577,
-   "log_odds": -0.717617140585828,
-   "pushes": "toward buying"
-  },
-  {
-   "feature": "day_of_week",
-   "importance": 0.00287951678209446,
-   "importance_std": 0.0031084514059454035,
-   "log_odds": -0.0015351049144059145,
-   "pushes": "toward buying"
-  },
-  {
-   "feature": "cart_items",
-   "importance": 0.0022682965598260552,
-   "importance_std": 0.0028152034965850583,
-   "log_odds": 0.025519952911359264,
-   "pushes": "toward abandoning"
-  },
-  {
-   "feature": "used_search",
-   "importance": 0.00042435586207161257,
-   "importance_std": 0.0006386436551820526,
-   "log_odds": -0.04883098084396802,
+   "feature": "gap_to_free_shipping",
+   "importance": 0.0003274871137801894,
+   "importance_std": 0.0034592370594994,
+   "log_odds": -0.18953621486826958,
    "pushes": "toward buying"
   },
   {
    "feature": "cart_lines",
    "importance": 0.0,
    "importance_std": 0.0,
-   "log_odds": 0.025519952911359264,
+   "log_odds": 0.02800142376325671,
    "pushes": "toward abandoning"
   },
   {
@@ -133,36 +105,71 @@
    "feature": "cart_adds",
    "importance": 0.0,
    "importance_std": 0.0,
-   "log_odds": 0.025519952911359264,
+   "log_odds": 0.02800142376325671,
    "pushes": "toward abandoning"
   },
   {
    "feature": "is_new_user",
    "importance": 0.0,
    "importance_std": 0.0,
-   "log_odds": -0.2602115061175576,
+   "log_odds": -0.23435418829778865,
    "pushes": "toward buying"
   },
   {
    "feature": "pays_shipping",
    "importance": 0.0,
    "importance_std": 0.0,
-   "log_odds": 0.006065212101500516,
+   "log_odds": 0.020503998995885737,
+   "pushes": "toward abandoning"
+  },
+  {
+   "feature": "used_search",
+   "importance": -0.0007910136145562908,
+   "importance_std": 0.0009624093181700562,
+   "log_odds": -0.023719755096847546,
+   "pushes": "toward buying"
+  },
+  {
+   "feature": "cart_value",
+   "importance": -0.0008537886697075781,
+   "importance_std": 0.002840212062677015,
+   "log_odds": -0.17314481287581504,
+   "pushes": "toward buying"
+  },
+  {
+   "feature": "day_of_week",
+   "importance": -0.0017501684083583325,
+   "importance_std": 0.0028749051326244154,
+   "log_odds": 0.008041708443216779,
    "pushes": "toward abandoning"
   },
   {
    "feature": "traffic_source",
-   "importance": -0.0007013092250006015,
-   "importance_std": 0.0023237141596539612,
-   "log_odds": 0.3180529003101296,
+   "importance": -0.003330319906288981,
+   "importance_std": 0.0017669588897818997,
+   "log_odds": 0.23575035447956036,
    "pushes": "toward abandoning"
   },
   {
-   "feature": "hour_of_day",
-   "importance": -0.004162968655271193,
-   "importance_std": 0.005544850303362308,
-   "log_odds": 0.07977176931557103,
+   "feature": "seconds_to_cart",
+   "importance": -0.003667083780032021,
+   "importance_std": 0.005502639909721183,
+   "log_odds": 0.02508962017401801,
    "pushes": "toward abandoning"
+  },
+  {
+   "feature": "cart_items",
+   "importance": -0.004430736797869717,
+   "importance_std": 0.0024712633549245893,
+   "log_odds": 0.02800142376325671,
+   "pushes": "toward abandoning"
+  },
+  {
+   "feature": "segment",
+   "importance": -0.005278399531542766,
+   "importance_std": 0.0038670084221326135,
+   "log_odds": -0.6959798132438506,
+   "pushes": "toward buying"
   }
  ]
 }
