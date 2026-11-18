@@ -8,9 +8,12 @@ import base from '@cartiq/eslint-config';
 export default [
   ...base,
   { ignores: ['.next/**', 'e2e/**', 'next-env.d.ts'] },
+  // Registered unscoped: `next build` looks for the plugin at the top level of
+  // the config and warns that it is missing when it only appears inside a
+  // `files` block, even though the rules below do run.
+  { plugins: { '@next/next': nextPlugin } },
   {
     files: ['**/*.{ts,tsx}'],
-    plugins: { '@next/next': nextPlugin },
     rules: {
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs['core-web-vitals'].rules,
