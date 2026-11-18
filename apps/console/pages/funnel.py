@@ -5,20 +5,29 @@ from __future__ import annotations
 import altair as alt
 import streamlit as st
 
-from cartiq_api.analytics import friction_ranking, funnel, funnel_by_dimension, kpis
-from cartiq_api.analytics.friction import friction_by_segment
 from cartiq_api.analytics.kpis import KPI_DEFINITIONS
+from cartiq_console.source import (
+    friction_by_segment,
+    friction_ranking,
+    funnel,
+    funnel_by_dimension,
+    is_snapshot,
+    kpis,
+)
 from cartiq_console.controls import (
     SOURCE_BADGE,
     empty_state,
     filter_sidebar,
     format_value,
+    snapshot_notice,
 )
 from cartiq_console.theme import AMBER, CHART_COLORS, CLAY, data_source_badge
 
 st.title("Funnel")
 
 filters = filter_sidebar(funnel_only=True, key="funnel")
+if is_snapshot():
+    snapshot_notice()
 data_source_badge(SOURCE_BADGE.get(filters.data_source, "none"))
 st.caption(filters.describe())
 

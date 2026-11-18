@@ -118,4 +118,10 @@ def friction_by_segment(filters: Filters | None = None) -> pd.DataFrame:
                 "revenue_at_risk": float(worst["revenue_at_risk"]),
             }
         )
+    if not rows:
+        # A source with no segments, or none with a measurable drop-off, is a
+        # normal answer: an empty frame with the right columns. Sorting an
+        # empty DataFrame built from [] raises KeyError, because it has no
+        # columns at all to sort by.
+        return pd.DataFrame(columns=["segment", "worst_step", "drop_rate", "revenue_at_risk"])
     return pd.DataFrame(rows).sort_values("revenue_at_risk", ascending=False).reset_index(drop=True)

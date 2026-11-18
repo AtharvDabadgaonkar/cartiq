@@ -6,6 +6,7 @@ PYTHON_BASE ?= $(shell command -v python3.11 || command -v python3)
 
 .DEFAULT_GOAL := help
 .PHONY: help env install db-up db-down db-reset migrate generate dev dev-web dev-api \
+	snapshot console-snapshot \
         dev-console ingest seed build-seed simulate simulate-aa metrics test test-web \
         test-api test-e2e lint typecheck format ci clean data train
 
@@ -81,6 +82,12 @@ train: ## Train the abandonment-risk model and export it for the storefront
 
 metrics: ## Recompute every number quoted in the README -> reports/metrics.json
 	$(PY) scripts/metrics.py
+
+snapshot: ## Export the console's analytics to data/snapshot/ for a database-free deploy
+	$(PY) scripts/export_snapshot.py
+
+console-snapshot: ## Preview the deployed (snapshot) console locally, ignoring the database
+	CARTIQ_SNAPSHOT=1 $(PY) -m streamlit run streamlit_app.py --server.port 8501
 
 test: test-web test-api ## Run all unit/integration tests
 

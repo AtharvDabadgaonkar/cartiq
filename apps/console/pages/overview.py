@@ -10,9 +10,11 @@ from __future__ import annotations
 
 import streamlit as st
 
-from cartiq_console.data import (
-    database_available,
+from cartiq_console.controls import snapshot_notice
+from cartiq_console.source import (
     dataset_imports,
+    is_snapshot,
+    mode,
     observable_steps,
     row_counts,
     simulation_runs,
@@ -33,14 +35,20 @@ FUNNEL = [
 
 st.title("Overview")
 
-connected = database_available()
+snapshotted = is_snapshot()
+connected = snapshotted or mode() == "live"
 counts: dict[str, int] = {}
-if not connected:
+
+if snapshotted:
+    snapshot_notice()
+elif not connected:
     st.warning(
-        "No database connection. Set `DATABASE_URL`, then run "
-        "`make db-up && make migrate && make seed`."
+        "No database connection and no committed snapshot. Set `DATABASE_URL`, then run "
+        "`make db-up && make migrate && make seed`, or run `make snapshot` against a "
+        "loaded database."
     )
-else:
+
+if connected:
     try:
         counts = row_counts()
     except Exception as error:  # noqa: BLE001 - surface, never crash the page

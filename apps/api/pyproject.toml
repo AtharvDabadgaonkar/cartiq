@@ -15,6 +15,9 @@ dependencies = [
   "sqlalchemy>=2.0,<3",
   "psycopg[binary]>=3.2,<4",
   "pandas>=2.2,<3",
+  # The committed snapshot the hosted console reads is parquet, so this is a
+  # direct dependency, not something to inherit from streamlit by luck.
+  "pyarrow>=17,<22",
   "numpy>=1.26,<3",
   "scikit-learn>=1.6,<2",
   "scipy>=1.14,<2",

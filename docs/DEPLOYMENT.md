@@ -54,6 +54,46 @@ locally and publish the readout rather than the raw events.
 
 ---
 
+## 1b. Or: no database at all (the committed snapshot)
+
+Section 1 is optional. The console can run on Streamlit Community Cloud with no
+hosted database, which costs nothing, needs no account beyond Streamlit itself,
+and cannot break later when a free-tier project is paused for inactivity.
+
+Against a loaded local database, export the analytics:
+
+```bash
+make snapshot        # -> data/snapshot/, about 0.4 MB
+git add data/snapshot && git commit -m "chore: refresh the console snapshot"
+```
+
+`scripts/export_snapshot.py` runs the **real** SQL models and the real model
+code and writes their *results*. Nothing is reimplemented against files, so the
+hosted numbers cannot drift from what the warehouse would answer — a test
+(`test_snapshot_still_agrees_with_a_live_query`) re-checks the committed files
+against a live query on the machine that took them.
+
+The console picks its mode on its own:
+
+| Condition | Mode |
+| --- | --- |
+| `DATABASE_URL` set and reachable | live, all filters work |
+| no `DATABASE_URL`, snapshot committed | snapshot, source selector only |
+| neither | a message explaining what to do |
+
+Preview the hosted experience locally with `make console-snapshot`
+(`CARTIQ_SNAPSHOT=1` forces snapshot mode even with a database running).
+
+What you give up: the date, device, traffic and segment filters, because a
+snapshot holds one slice per source. Those controls are hidden rather than
+disabled — a filter that silently does nothing is worse than no filter. Every
+page reading a snapshot says so, with the date it was taken.
+
+Skip section 1 entirely if you choose this, and leave `DATABASE_URL` out of
+the Streamlit secrets.
+
+---
+
 ## 2. Console (Streamlit Community Cloud)
 
 1. Go to <https://share.streamlit.io> and sign in with GitHub.
@@ -71,6 +111,10 @@ DATABASE_URL = "<pooled Supabase URI>"
 LLM_PROVIDER = "mock"
 FLAG_HASH_SALT = "cartiq-v1"
 ```
+
+Running on the committed snapshot instead? Omit `DATABASE_URL` entirely. With
+it set but unreachable the console still falls back to the snapshot, but it
+spends a refused connection attempt per rerun to find out.
 
 `FLAG_HASH_SALT` must match whatever generated your data, or experiment
 assignments computed in the console will not agree with the stored ones.

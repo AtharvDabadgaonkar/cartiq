@@ -1,0 +1,168 @@
+{
+ "rows": 6695,
+ "positive_rate": 0.8055265123226288,
+ "best_model": "logistic_regression",
+ "metrics": {
+  "logistic_regression": {
+   "roc_auc": 0.5897330287087437,
+   "average_precision": 0.8405027606170129,
+   "precision": 0.8052568697729988,
+   "recall": 1.0,
+   "f1": 0.8921244209133025,
+   "brier_score": 0.15390744404058157
+  },
+  "gradient_boosting": {
+   "roc_auc": 0.5794178150770967,
+   "average_precision": 0.8390980191351881,
+   "precision": 0.8084975369458128,
+   "recall": 0.9740356083086054,
+   "f1": 0.8835800807537012,
+   "brier_score": 0.16372659565641248
+  },
+  "majority_class_baseline": {
+   "roc_auc": 0.5,
+   "average_precision": 0.8052568697729988,
+   "precision": 0.8052568697729988,
+   "recall": 1.0,
+   "f1": 0.8921244209133024,
+   "brier_score": 0.15681824345639045
+  }
+ },
+ "calibration": [
+  {
+   "bin_lower": 0.6000000000000001,
+   "bin_upper": 0.7000000000000001,
+   "predicted": 0.6679053923951598,
+   "observed": 0.6666666666666666,
+   "count": 117
+  },
+  {
+   "bin_lower": 0.7000000000000001,
+   "bin_upper": 0.8,
+   "predicted": 0.7589861508262346,
+   "observed": 0.7698815566835872,
+   "count": 591
+  },
+  {
+   "bin_lower": 0.8,
+   "bin_upper": 0.9,
+   "predicted": 0.8490571110312012,
+   "observed": 0.8445154419595314,
+   "count": 939
+  },
+  {
+   "bin_lower": 0.9,
+   "bin_upper": 1.0,
+   "predicted": 0.907716958369742,
+   "observed": 0.8148148148148148,
+   "count": 27
+  }
+ ],
+ "feature_importance": [
+  {
+   "feature": "gap_to_free_shipping",
+   "importance": 0.018764687242033774,
+   "importance_std": 0.008342254529142772,
+   "log_odds": -0.08901882710486483,
+   "pushes": "toward buying"
+  },
+  {
+   "feature": "device",
+   "importance": 0.00912060994454531,
+   "importance_std": 0.004134804590894894,
+   "log_odds": 0.584032767129034,
+   "pushes": "toward abandoning"
+  },
+  {
+   "feature": "seconds_to_cart",
+   "importance": 0.007300701463884729,
+   "importance_std": 0.003622337474502439,
+   "log_odds": 0.03021305299105108,
+   "pushes": "toward abandoning"
+  },
+  {
+   "feature": "cart_value",
+   "importance": 0.00660445241020835,
+   "importance_std": 0.0052890982812592345,
+   "log_odds": -0.10364174939576681,
+   "pushes": "toward buying"
+  },
+  {
+   "feature": "segment",
+   "importance": 0.004898286195004165,
+   "importance_std": 0.001847207661486577,
+   "log_odds": -0.717617140585828,
+   "pushes": "toward buying"
+  },
+  {
+   "feature": "day_of_week",
+   "importance": 0.00287951678209446,
+   "importance_std": 0.0031084514059454035,
+   "log_odds": -0.0015351049144059145,
+   "pushes": "toward buying"
+  },
+  {
+   "feature": "cart_items",
+   "importance": 0.0022682965598260552,
+   "importance_std": 0.0028152034965850583,
+   "log_odds": 0.025519952911359264,
+   "pushes": "toward abandoning"
+  },
+  {
+   "feature": "used_search",
+   "importance": 0.00042435586207161257,
+   "importance_std": 0.0006386436551820526,
+   "log_odds": -0.04883098084396802,
+   "pushes": "toward buying"
+  },
+  {
+   "feature": "cart_lines",
+   "importance": 0.0,
+   "importance_std": 0.0,
+   "log_odds": 0.025519952911359264,
+   "pushes": "toward abandoning"
+  },
+  {
+   "feature": "product_views",
+   "importance": 0.0,
+   "importance_std": 0.0,
+   "log_odds": 0.0,
+   "pushes": "toward buying"
+  },
+  {
+   "feature": "cart_adds",
+   "importance": 0.0,
+   "importance_std": 0.0,
+   "log_odds": 0.025519952911359264,
+   "pushes": "toward abandoning"
+  },
+  {
+   "feature": "is_new_user",
+   "importance": 0.0,
+   "importance_std": 0.0,
+   "log_odds": -0.2602115061175576,
+   "pushes": "toward buying"
+  },
+  {
+   "feature": "pays_shipping",
+   "importance": 0.0,
+   "importance_std": 0.0,
+   "log_odds": 0.006065212101500516,
+   "pushes": "toward abandoning"
+  },
+  {
+   "feature": "traffic_source",
+   "importance": -0.0007013092250006015,
+   "importance_std": 0.0023237141596539612,
+   "log_odds": 0.3180529003101296,
+   "pushes": "toward abandoning"
+  },
+  {
+   "feature": "hour_of_day",
+   "importance": -0.004162968655271193,
+   "importance_std": 0.005544850303362308,
+   "log_odds": 0.07977176931557103,
+   "pushes": "toward abandoning"
+  }
+ ]
+}

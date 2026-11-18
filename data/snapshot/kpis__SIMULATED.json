@@ -1,0 +1,80 @@
+{
+ "conversion_rate": {
+  "label": "Conversion rate",
+  "definition": "Sessions that reached purchase, divided by all sessions.",
+  "unit": "share",
+  "lower_is_better": false,
+  "available": true,
+  "value": 0.018083333333333333
+ },
+ "aov": {
+  "label": "Average order value",
+  "definition": "Total revenue divided by the number of orders.",
+  "unit": "currency",
+  "lower_is_better": false,
+  "available": true,
+  "value": 10.850986892829606
+ },
+ "revenue_per_visitor": {
+  "label": "Revenue per visitor",
+  "definition": "Total revenue divided by all sessions, converting or not.",
+  "unit": "currency",
+  "lower_is_better": false,
+  "available": true,
+  "value": 0.19546847222222222
+ },
+ "cart_abandonment_rate": {
+  "label": "Cart abandonment rate",
+  "definition": "Sessions that added to cart but never purchased, divided by sessions that added to cart.",
+  "unit": "share",
+  "lower_is_better": true,
+  "available": true,
+  "value": 0.8055265123226288
+ },
+ "search_to_purchase_rate": {
+  "label": "Search-to-purchase rate",
+  "definition": "Sessions that used search AND purchased, divided by sessions that used search.",
+  "unit": "share",
+  "lower_is_better": false,
+  "available": true,
+  "value": 0.02354676295580532
+ },
+ "orders": {
+  "label": "Orders",
+  "definition": "Distinct orders placed.",
+  "unit": "count",
+  "lower_is_better": false,
+  "available": true,
+  "value": 1297.0
+ },
+ "revenue": {
+  "label": "Revenue",
+  "definition": "Total order revenue.",
+  "unit": "currency",
+  "lower_is_better": false,
+  "available": true,
+  "value": 14073.73
+ },
+ "items_per_order": {
+  "label": "Items per order",
+  "definition": "Total items divided by the number of orders.",
+  "unit": "count",
+  "lower_is_better": false,
+  "available": true,
+  "value": 2.5296838858905164
+ },
+ "clv_historical": {
+  "label": "Customer lifetime value",
+  "definition": "Mean observed revenue per attributed customer to date. Historical, not projected.",
+  "unit": "currency",
+  "lower_is_better": false,
+  "available": true,
+  "value": 10.91833204034135
+ },
+ "_context": {
+  "sessions": 72000,
+  "orders": 1297,
+  "slice": "Simulated",
+  "sessions_meaningful": true
+ }
+}

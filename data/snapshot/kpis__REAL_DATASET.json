@@ -1,0 +1,84 @@
+{
+ "conversion_rate": {
+  "label": "Conversion rate",
+  "definition": "Sessions that reached purchase, divided by all sessions.",
+  "unit": "share",
+  "lower_is_better": false,
+  "available": false,
+  "value": null,
+  "reason": "This source records completed orders only, so every session in it converted by construction. A session-denominated rate computed here would be 100% or undefined, not a finding."
+ },
+ "aov": {
+  "label": "Average order value",
+  "definition": "Total revenue divided by the number of orders.",
+  "unit": "currency",
+  "lower_is_better": false,
+  "available": true,
+  "value": 511.04201
+ },
+ "revenue_per_visitor": {
+  "label": "Revenue per visitor",
+  "definition": "Total revenue divided by all sessions, converting or not.",
+  "unit": "currency",
+  "lower_is_better": false,
+  "available": false,
+  "value": null,
+  "reason": "This source records completed orders only, so every session in it converted by construction. A session-denominated rate computed here would be 100% or undefined, not a finding."
+ },
+ "cart_abandonment_rate": {
+  "label": "Cart abandonment rate",
+  "definition": "Sessions that added to cart but never purchased, divided by sessions that added to cart.",
+  "unit": "share",
+  "lower_is_better": true,
+  "available": false,
+  "value": null,
+  "reason": "This source records completed orders only, so every session in it converted by construction. A session-denominated rate computed here would be 100% or undefined, not a finding."
+ },
+ "search_to_purchase_rate": {
+  "label": "Search-to-purchase rate",
+  "definition": "Sessions that used search AND purchased, divided by sessions that used search.",
+  "unit": "share",
+  "lower_is_better": false,
+  "available": false,
+  "value": null,
+  "reason": "This source records completed orders only, so every session in it converted by construction. A session-denominated rate computed here would be 100% or undefined, not a finding."
+ },
+ "orders": {
+  "label": "Orders",
+  "definition": "Distinct orders placed.",
+  "unit": "count",
+  "lower_is_better": false,
+  "available": true,
+  "value": 3000.0
+ },
+ "revenue": {
+  "label": "Revenue",
+  "definition": "Total order revenue.",
+  "unit": "currency",
+  "lower_is_better": false,
+  "available": true,
+  "value": 1533126.03
+ },
+ "items_per_order": {
+  "label": "Items per order",
+  "definition": "Total items divided by the number of orders.",
+  "unit": "count",
+  "lower_is_better": false,
+  "available": true,
+  "value": 293.57866666666666
+ },
+ "clv_historical": {
+  "label": "Customer lifetime value",
+  "definition": "Mean observed revenue per attributed customer to date. Historical, not projected.",
+  "unit": "currency",
+  "lower_is_better": false,
+  "available": true,
+  "value": 938.0291005665722
+ },
+ "_context": {
+  "sessions": 3000,
+  "orders": 3000,
+  "slice": "Real Dataset",
+  "sessions_meaningful": false
+ }
+}

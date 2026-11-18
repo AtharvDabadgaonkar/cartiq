@@ -5,8 +5,14 @@ from __future__ import annotations
 import altair as alt
 import streamlit as st
 
-from cartiq_api.analytics import behavioural_clusters, rfm_segments, segment_kpis
-from cartiq_console.controls import SOURCE_BADGE, available_sources, empty_state
+from cartiq_console.controls import SOURCE_BADGE, empty_state, snapshot_notice
+from cartiq_console.source import (
+    available_sources,
+    behavioural_clusters,
+    is_snapshot,
+    rfm_segments,
+    segment_kpis,
+)
 from cartiq_console.theme import CHART_COLORS, data_source_badge
 
 st.title("Segments")
@@ -22,6 +28,9 @@ data_source = st.sidebar.selectbox(
 )
 
 data_source_badge(SOURCE_BADGE.get(data_source, "none"))
+if is_snapshot():
+    snapshot_notice()
+
 if data_source == "REAL_DATASET":
     st.caption(
         "Computed from real purchase behaviour. Only attributed customers are scored: the "

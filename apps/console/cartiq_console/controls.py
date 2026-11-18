@@ -68,12 +68,18 @@ def filter_sidebar(*, funnel_only: bool = False, key: str = "f") -> Filters:
             funnel chart would produce a 100% conversion rate that looks real.
         key: Widget key prefix, so two pages do not share state.
     """
+    from cartiq_console import source as data_source_layer
+
+    if data_source_layer.is_snapshot():
+        return _snapshot_sidebar(funnel_only=funnel_only, key=key)
+
     sources = available_sources()
     if not sources:
         st.sidebar.warning("No database connection.")
         st.warning(
             "This console needs a database. Set `DATABASE_URL` (a Streamlit secret when "
-            "deployed), then run `make migrate && make seed`.",
+            "deployed), then run `make migrate && make seed`, or commit a snapshot with "
+            "`make snapshot`.",
             icon=":material/database_off:",
         )
         st.stop()
@@ -132,6 +138,54 @@ def filter_sidebar(*, funnel_only: bool = False, key: str = "f") -> Filters:
         traffic_sources=tuple(traffic),
         segments=tuple(segments),
         is_new_user={"All": None, "New": True, "Returning": False}[visitor],
+    )
+
+
+def _snapshot_sidebar(*, funnel_only: bool, key: str) -> Filters:
+    """Source picker only, for a frozen snapshot.
+
+    The date, device, traffic and segment controls are deliberately absent
+    rather than disabled. A snapshot holds one slice per source, so those
+    widgets could only mislead: a reader would move them and see the numbers
+    stay put.
+    """
+    from cartiq_console import snapshot, source as data_source_layer
+
+    sources = data_source_layer.available_sources()
+    if funnel_only:
+        sources = [s for s in sources if s in ("SIMULATED", "LIVE_DEMO")] or sources
+    if not sources:
+        st.warning("The committed snapshot has no sources.", icon=":material/dataset:")
+        st.stop()
+
+    with st.sidebar:
+        st.markdown("### Slice")
+        data_source = st.selectbox(
+            "Data source",
+            sources,
+            format_func=lambda s: SOURCE_LABELS.get(s, s),
+            key=f"{key}_source",
+            help="Real and simulated sessions are never mixed in one number.",
+        )
+        st.caption(
+            f"Reading a snapshot taken {snapshot.taken_on()}. Date, device and "
+            "segment filters need a live database."
+        )
+
+    return Filters(data_source=data_source)
+
+
+def snapshot_notice() -> None:
+    """State plainly that the page is reading a snapshot, not a live query."""
+    from cartiq_console import snapshot
+
+    st.info(
+        f"**Snapshot of {snapshot.taken_on()}.** No database is attached to this "
+        "deployment, so these figures were exported from the live SQL models by "
+        "`scripts/export_snapshot.py` and committed to the repository. They are the "
+        "same numbers that code produced, not estimates — but the slice is frozen, "
+        "so the filters are limited to the data source.",
+        icon=":material/photo_camera:",
     )
 
 

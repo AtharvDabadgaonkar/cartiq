@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import altair as alt
 import pandas as pd
 import streamlit as st
@@ -13,7 +15,8 @@ from cartiq_api.nudges import (
     MEDIUM_RISK_THRESHOLD,
     describe_rules,
 )
-from cartiq_console.controls import empty_state
+from cartiq_console.controls import empty_state, snapshot_notice
+from cartiq_console.source import abandonment_payload, is_snapshot
 from cartiq_console.theme import AMBER, CLAY, MOSS, data_source_badge
 
 st.title("Abandonment")
@@ -31,11 +34,31 @@ def trained():
     return train_abandonment_model()
 
 
-try:
-    result = trained()
-except NotEnoughDataError as error:
-    empty_state(f"{error}")
-    st.stop()
+if is_snapshot():
+    snapshot_notice()
+    payload = abandonment_payload()
+    if payload is None:
+        empty_state("The committed snapshot has no model evaluation.")
+        st.stop()
+    if "error" in payload:
+        # The export recorded why training was refused, so the page can say so
+        # instead of looking broken.
+        empty_state(payload["error"])
+        st.stop()
+    result = SimpleNamespace(
+        rows=int(payload["rows"]),
+        positive_rate=float(payload["positive_rate"]),
+        best_model=str(payload["best_model"]),
+        metrics=payload["metrics"],
+        calibration=pd.DataFrame(payload["calibration"]),
+        feature_importance=pd.DataFrame(payload["feature_importance"]),
+    )
+else:
+    try:
+        result = trained()
+    except NotEnoughDataError as error:
+        empty_state(f"{error}")
+        st.stop()
 
 metrics = pd.DataFrame(result.metrics).T
 best = result.metrics[result.best_model]

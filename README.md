@@ -160,7 +160,17 @@ Then, optionally:
 make ingest      # the full real dataset (44MB, downloads without credentials)
 make simulate    # 500k simulated sessions (see docs/SIMULATION.md)
 make metrics     # recompute every number quoted here
+make snapshot    # export the console's analytics for a database-free deploy
 ```
+
+The hosted console runs with **no database**. `make snapshot` runs the real SQL
+models and commits their *results* to `data/snapshot/` (~0.4 MB), and the
+console reads those when no `DATABASE_URL` is set, saying on every page that it
+is a snapshot and when it was taken. Nothing is reimplemented against files, so
+the hosted figures cannot disagree with the warehouse — a test re-checks the
+committed files against a live query. Filters other than the data source are
+hidden in that mode, because a snapshot holds one slice per source. Details in
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 No API key is needed: `LLM_PROVIDER=mock` is the default and the mock provider
 is deterministic and grounding-faithful, so the whole app and the full test
