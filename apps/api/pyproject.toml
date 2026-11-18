@@ -17,7 +17,11 @@ dependencies = [
   "pandas>=2.2,<3",
   # The committed snapshot the hosted console reads is parquet, so this is a
   # direct dependency, not something to inherit from streamlit by luck.
-  "pyarrow>=17,<22",
+  # Deliberately uncapped: an upper bound here once excluded every release
+  # carrying wheels for the deploy's Python, so pip fell back to building from
+  # source and failed for want of cmake. A cap on this package buys nothing and
+  # breaks the deploy on the next interpreter bump.
+  "pyarrow>=17",
   "numpy>=1.26,<3",
   "scikit-learn>=1.6,<2",
   "scipy>=1.14,<2",
