@@ -142,9 +142,28 @@ jobs:
       # The storefront needs a catalog to render, so the committed seed is the
       # fixture: the suite exercises real products, not mocks.
       - run: python scripts/seed.py
-      - run: pnpm --filter @cartiq/web exec playwright install --with-deps chromium
+      # Output echoed as ::error:: annotations on failure: the job log needs
+      # admin rights to read, so without this a broken browser install reports
+      # only that it broke.
+      - name: playwright install
+        run: |
+          set -o pipefail
+          if ! pnpm --filter @cartiq/web exec playwright install --with-deps chromium 2>&1 | tee /tmp/pw-install.log; then
+            tail -40 /tmp/pw-install.log | while IFS= read -r line; do
+              printf '::error::%s\n' "$line"
+            done
+            exit 1
+          fi
       - run: pnpm --filter @cartiq/web build
-      - run: pnpm --filter @cartiq/web exec playwright test
+      - name: playwright test
+        run: |
+          set -o pipefail
+          if ! pnpm --filter @cartiq/web exec playwright test 2>&1 | tee /tmp/pw-test.log; then
+            tail -60 /tmp/pw-test.log | while IFS= read -r line; do
+              printf '::error::%s\n' "$line"
+            done
+            exit 1
+          fi
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
