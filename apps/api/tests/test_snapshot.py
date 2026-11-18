@@ -93,8 +93,9 @@ def _database_holds_the_snapshots_data() -> bool:
     """
     if not ping():
         return False
-    from cartiq_api.db import get_engine
     from sqlalchemy import text
+
+    from cartiq_api.db import get_engine
 
     with get_engine().connect() as connection:
         live = connection.execute(text("SELECT COUNT(*) FROM events")).scalar_one()
